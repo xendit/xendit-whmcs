@@ -1,0 +1,15 @@
+{
+    "name": "xendit/xendit-whmcs",
+    "description": "Xendit Payment Gateway for WHMCS",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "TPI",
+            "email": "thirdpartyintegrations@xendit.co"
+        }
+    ],
+    "homepage": "https://xendit.co",
+    "require-dev": {
+    	"phpunit/phpunit": "@stable"
+    }
+}
