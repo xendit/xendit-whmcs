@@ -106,17 +106,30 @@ class Recurring extends \Xendit\Lib\ActionBase
             throw \Exception("Invoice does not exists!");
 
         foreach ($invoice->items()->get() as $item){
-            foreach (self::WHMCS_PRODUCTS as $product){
-                foreach ($item->$product()->get() as $p){
-                    $this->storeTransaction(
-                        [
-                            "invoiceid" => $invoiceid,
-                            "orderid" => $p->orderid,
-                            "relid" => $p->id,
-                            "type" => $item->type,
-                            "external_id" => $this->generateExternalId($invoiceid)
-                        ]
-                    );
+
+            // Custom item
+            if($item->type == ""){
+                $this->storeTransaction(
+                    [
+                        "invoiceid" => $invoiceid,
+                        "type" => $item->type,
+                        "external_id" => $this->generateExternalId($invoiceid)
+                    ]
+                );
+            }else{
+                // Products
+                foreach (self::WHMCS_PRODUCTS as $product){
+                    foreach ($item->$product()->get() as $p){
+                        $this->storeTransaction(
+                            [
+                                "invoiceid" => $invoiceid,
+                                "orderid" => $p->orderid,
+                                "relid" => $p->id,
+                                "type" => $item->type,
+                                "external_id" => $this->generateExternalId($invoiceid)
+                            ]
+                        );
+                    }
                 }
             }
         }

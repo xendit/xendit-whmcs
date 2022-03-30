@@ -30,7 +30,10 @@ function xendit_storeremote($params){}
  */
 function xendit_config()
 {
+    // Create new table
     (new \Xendit\Lib\ActionBase())->createTable();
+
+    // Generate config
     return (new \Xendit\Lib\ActionBase())->createConfig();
 }
 

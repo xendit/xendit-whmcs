@@ -75,6 +75,11 @@ class ActionBase
                 'Default' => '',
                 'Description' => '<div class="alert alert-info top-margin-5 bottom-margin-5"><img src="../modules/gateways/xendit/logo.png" width="70" align="left" style="padding-right:12px;" /> Xendit is a leading payment gateway for Indonesia, the Philippines and Southeast Asia</span></div>',
             ),
+            'testMode' => array(
+                'FriendlyName' => 'Test Mode',
+                'Type' => 'yesno',
+                'Description' => 'Enable test mode',
+            ),
             'publicKey' => array(
                 'FriendlyName' => 'Public Key',
                 'Type' => 'password',

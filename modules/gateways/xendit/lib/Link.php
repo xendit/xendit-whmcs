@@ -50,8 +50,8 @@ class Link extends ActionBase
             'fees' => array(['type' => 'Payment Fee', 'value' => (float)$params['paymentfee']]),
             'amount' => $params['amount'] + (float)$params['paymentfee'],
             'invoice_duration' => $params['expired'],
-            'success_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl'], false),
-            'failure_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl'], false),
+            'success_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),
+            'failure_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),
             'should_charge_multiple_use_token' => true,
             'customer' => $this->extractCustomer($params)
         ];
@@ -60,14 +60,11 @@ class Link extends ActionBase
     /**
      * @param $invoiceId
      * @param string $systemurl
-     * @param bool $success
      * @return string
      */
-    protected function invoiceUrl($invoiceId, string $systemurl, bool $success = true): string
+    protected function invoiceUrl($invoiceId, string $systemurl): string
     {
-        return $success
-            ? $systemurl. "/modules/gateways/callback/". $this->getDomainName() .".php?status=success&id=". $invoiceId
-            : $systemurl . '/viewinvoice.php?id=' . $invoiceId;
+        return $systemurl . 'viewinvoice.php?id=' . $invoiceId;
     }
 
     /**
@@ -146,7 +143,7 @@ class Link extends ActionBase
 
             // Check xendit invoice status
             if(!empty($xenditInvoice)){
-                if($xenditInvoice['status'] == "PAID"){
+                if($xenditInvoice['status'] == "PAID" || $xenditInvoice['status'] == "SETTLED"){
                     $this->updateTransactions($transactions);
                     $this->confirmInvoice(
                         $params["invoiceid"],
@@ -155,7 +152,7 @@ class Link extends ActionBase
                     );
 
                     // Redirect to success page
-                    header('Location:' . sprintf("%scart.php?a=complete", $params['systemurl']));
+                    header('Location:' . sprintf("%sviewinvoice.php?id=%s", $params['systemurl'], $params['invoiceid']));
                     exit;
                 }elseif($xenditInvoice['status'] == "EXPIRED"){
                     $this->updateTransactions($transactions, "", "EXPIRED");

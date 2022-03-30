@@ -11,13 +11,24 @@ use Xendit\Lib\Recurring;
 function hookInvoiceCreated($vars)
 {
     $xenditRecurring = new Recurring();
+    $invoice = $xenditRecurring->getInvoice($vars['invoiceid']);
+
+    // if payment method is Xendit
+    if($invoice->paymentmethod != $xenditRecurring->getDomainName()){
+        return;
+    }
+
+    // Set paymethodid is null
+    $invoice->setAttribute("paymethodid", null)->save();
+
+    // Save xendit transaction
     $xenditRecurring->storeTransactions($vars['invoiceid']);
 
+    // Check if is recurring payment
     if($xenditRecurring->isRecurring($vars['invoiceid'])){
         $previousInvoice = $xenditRecurring->getPreviousInvoice($vars['invoiceid']);
         if(!empty($previousInvoice) && !empty($previousInvoice->paymethodid))
         {
-            $invoice = $xenditRecurring->getInvoice($vars['invoiceid']);
             $invoice->setAttribute("paymethodid", $previousInvoice->paymethodid);
             $invoice->save();
 
@@ -26,4 +37,4 @@ function hookInvoiceCreated($vars)
         }
     }
 }
-add_hook('InvoiceCreated', 1, 'hookInvoiceCreated');
+add_hook('InvoiceCreation', 1, 'hookInvoiceCreated');
