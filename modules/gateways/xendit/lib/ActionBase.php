@@ -73,26 +73,68 @@ class ActionBase
                 'Type' => 'hidden',
                 'Size' => '72',
                 'Default' => '',
-                'Description' => '<div class="alert alert-info top-margin-5 bottom-margin-5"><img src="../modules/gateways/xendit/logo.png" width="70" align="left" style="padding-right:12px;" /> Xendit is a leading payment gateway for Indonesia, the Philippines and Southeast Asia</span></div>',
+                'Description' => '<div class="alert alert-info top-margin-5 bottom-margin-5">
+<img src="../modules/gateways/xendit/logo.png" width="70" align="left" style="padding-right:12px;" />
+<span>Xendit is a leading payment gateway for Indonesia, the Philippines and Southeast Asia</span>
+</div>',
             ),
-            'testMode' => array(
+            'xenditTestMode' => array(
                 'FriendlyName' => 'Test Mode',
                 'Type' => 'yesno',
-                'Description' => 'Enable test mode',
+                'Description' => 'Enable test mode
+<script type="text/javascript">
+const testModeCheckbox = $("[type=checkbox][name=\'field[xenditTestMode]\']");
+const showTestModeFields = function(testMode){
+    $("[name=\'field[xenditTestSecretKey]\']").parent().parent().prop("hidden", testMode);
+    $("[name=\'field[xenditTestPublicKey]\']").parent().parent().prop("hidden", testMode);
+    $("[name=\'field[xenditSecretKey]\']").parent().parent().prop("hidden", !testMode);
+    $("[name=\'field[xenditPublicKey]\']").parent().parent().prop("hidden", !testMode);
+}
+$(document).ready(function (){
+    showTestModeFields(!testModeCheckbox.is(":checked"));
+    testModeCheckbox.on("change", function(){
+        showTestModeFields(!$(this).is(":checked"));
+    });
+});
+</script>
+                ',
             ),
-            'publicKey' => array(
+            'xenditTestPublicKey' => array(
+                'FriendlyName' => 'Test Public Key',
+                'Type' => 'password',
+                'Size' => '25',
+                'Default' => '',
+                'Description' => 'Enter test public key here',
+            ),
+            'xenditTestSecretKey' => array(
+                'FriendlyName' => 'Test Secret Key',
+                'Type' => 'password',
+                'Size' => '25',
+                'Default' => '',
+                'Description' => 'Enter test secret key here',
+            ),
+            'xenditPublicKey' => array(
                 'FriendlyName' => 'Public Key',
                 'Type' => 'password',
                 'Size' => '25',
                 'Default' => '',
-                'Description' => 'Enter secret key here',
+                'Description' => 'Enter public key here',
             ),
-            'secretKey' => array(
+            'xenditSecretKey' => array(
                 'FriendlyName' => 'Secret Key',
                 'Type' => 'password',
                 'Size' => '25',
                 'Default' => '',
                 'Description' => 'Enter secret key here',
+            ),
+            'xenditExternalPrefix' => array(
+                'FriendlyName' => 'External ID Prefix',
+                'Type' => 'text',
+                'Size' => '25',
+                'Default' => 'WHMCS-Xendit',
+                'Description' => '<div>
+Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
+</div>',
             ),
         );
     }
@@ -104,7 +146,9 @@ class ActionBase
      */
     protected function generateExternalId(int $invoiceId, bool $retry = false): string
     {
-        return !$retry ? sprintf("WHMCS-%s", $invoiceId) : sprintf("WHMCS-%s-%s", $invoiceId, microtime(true));
+        $config = $this->getXenditConfig();
+        $externalPrefix = !empty($config["xenditExternalPrefix"]) ? $config["xenditExternalPrefix"] : "WHMCS-Xendit";
+        return !$retry ? sprintf("%s-%s", $externalPrefix, $invoiceId) : sprintf("%s-%s-%s", $externalPrefix, $invoiceId, microtime(true));
     }
 
     /**
@@ -162,41 +206,51 @@ class ActionBase
      * @param int $invoiceId
      * @param array $xenditInvoiceData
      * @param bool $success
-     * @return void
+     * @return bool
+     * @throws \Exception
      */
     public function confirmInvoice(int $invoiceId, array $xenditInvoiceData, bool $success)
     {
-        $transactionId = $xenditInvoiceData['id'];
-        $paymentAmount = $xenditInvoiceData['paid_amount'];
-        $paymentFee = $xenditInvoiceData['fees_paid_amount'];
-        $transactionStatus = $success ? 'Success' : 'Failure';
-
-        $invoiceId = checkCbInvoiceID($invoiceId, $this->getDomainName());
-        checkCbTransID($transactionId);
-
-        if(isset($xenditInvoiceData['credit_card_charge_id']) && isset($xenditInvoiceData['credit_card_token'])){
-            $cardInfo = $this->xenditRequest->getCardInfo($xenditInvoiceData['credit_card_charge_id']);
-            $cardExpired = $this->xenditRequest->getCardTokenInfo($xenditInvoiceData['credit_card_token']);
-            if(!empty($cardInfo) && !empty($cardExpired)){
-                $lastDigit = substr($cardInfo["masked_card_number"], -4);
-                invoiceSaveRemoteCard(
-                    $invoiceId,
-                    $lastDigit,
-                    $cardInfo["card_brand"],
-                    sprintf("%s/%s", $cardExpired["card_expiration_month"], $cardExpired["card_expiration_year"]),
-                    $xenditInvoiceData['credit_card_token']
-                );
+        try{
+            if(!$success){
+                return;
             }
+
+            $transactionId = $xenditInvoiceData['id'];
+            $paymentAmount = $xenditInvoiceData['paid_amount'];
+            $paymentFee = $xenditInvoiceData['fees_paid_amount'];
+            $transactionStatus = $success ? 'Success' : 'Failure';
+
+            $invoiceId = checkCbInvoiceID($invoiceId, $this->getDomainName());
+            checkCbTransID($transactionId);
+
+            if(isset($xenditInvoiceData['credit_card_charge_id']) && isset($xenditInvoiceData['credit_card_token'])){
+                $cardInfo = $this->xenditRequest->getCardInfo($xenditInvoiceData['credit_card_charge_id']);
+                $cardExpired = $this->xenditRequest->getCardTokenInfo($xenditInvoiceData['credit_card_token']);
+                if(!empty($cardInfo) && !empty($cardExpired)){
+                    $lastDigit = substr($cardInfo["masked_card_number"], -4);
+                    invoiceSaveRemoteCard(
+                        $invoiceId,
+                        $lastDigit,
+                        $cardInfo["card_brand"],
+                        sprintf("%s/%s", $cardExpired["card_expiration_month"], $cardExpired["card_expiration_year"]),
+                        $xenditInvoiceData['credit_card_token']
+                    );
+                }
+            }
+
+            addInvoicePayment(
+                $invoiceId,
+                $transactionId,
+                $paymentAmount,
+                $paymentFee,
+                $this->getDomainName()
+            );
+
+            logTransaction($this->getDomainName(), $_POST, $transactionStatus);
+            return true;
+        }catch (\Exception $exception){
+            throw new \Exception($exception->getMessage());
         }
-
-        addInvoicePayment(
-            $invoiceId,
-            $transactionId,
-            $paymentAmount,
-            $paymentFee,
-            $this->getDomainName()
-        );
-
-        logTransaction($this->getDomainName(), $_POST, $transactionStatus);
     }
 }
