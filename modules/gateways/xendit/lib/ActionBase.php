@@ -4,7 +4,7 @@ namespace Xendit\Lib;
 
 use WHMCS\Database\Capsule;
 use Illuminate\Database\Query\Builder as QueryBuilder;
-use Xendit\Lib\Model\XenditTransaction;
+use \Xendit\Lib\Model\XenditTransaction;
 use Xendit\Lib\XenditRequest;
 
 use WHMCS\Billing\Invoice;
@@ -45,6 +45,7 @@ class ActionBase
                 $table->string('external_id', 255);
                 $table->string('transactionid', 255);
                 $table->string('status', 100);
+                $table->string('payment_method', 255);
                 $table->timestamps();
             });
         }
@@ -96,8 +97,7 @@ $(document).ready(function (){
         showTestModeFields(!$(this).is(":checked"));
     });
 });
-</script>
-                ',
+</script>',
             ),
             'xenditTestPublicKey' => array(
                 'FriendlyName' => 'Test Public Key',
@@ -204,12 +204,24 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
 
     /**
      * @param int $invoiceId
+     * @return bool
+     */
+    public function isInvoiceUsedCreditCard(int $invoiceId)
+    {
+        $transaction =  XenditTransaction::where("invoiceid", $invoiceId)
+            ->where("payment_method", "CREDIT_CARD")
+            ->get();
+        return $transaction->count() > 0;
+    }
+
+    /**
+     * @param int $invoiceId
      * @param array $xenditInvoiceData
      * @param bool $success
      * @return bool
      * @throws \Exception
      */
-    public function confirmInvoice(int $invoiceId, array $xenditInvoiceData, bool $success)
+    public function confirmInvoice(int $invoiceId, array $xenditInvoiceData, bool $success = true)
     {
         try{
             if(!$success){
@@ -218,15 +230,14 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
 
             $transactionId = $xenditInvoiceData['id'];
             $paymentAmount = $xenditInvoiceData['paid_amount'];
-            $paymentFee = $xenditInvoiceData['fees_paid_amount'];
-            $transactionStatus = $success ? 'Success' : 'Failure';
+            $paymentFee = $xenditInvoiceData['fees'][0]["value"];
+            $transactionStatus = 'Success';
 
-            $invoiceId = checkCbInvoiceID($invoiceId, $this->getDomainName());
-            checkCbTransID($transactionId);
-
+            // Save credit card token
             if(isset($xenditInvoiceData['credit_card_charge_id']) && isset($xenditInvoiceData['credit_card_token'])){
                 $cardInfo = $this->xenditRequest->getCardInfo($xenditInvoiceData['credit_card_charge_id']);
                 $cardExpired = $this->xenditRequest->getCardTokenInfo($xenditInvoiceData['credit_card_token']);
+
                 if(!empty($cardInfo) && !empty($cardExpired)){
                     $lastDigit = substr($cardInfo["masked_card_number"], -4);
                     invoiceSaveRemoteCard(
@@ -239,6 +250,9 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
                 }
             }
 
+            $invoiceId = checkCbInvoiceID($invoiceId, $this->getDomainName());
+            checkCbTransID($transactionId);
+
             addInvoicePayment(
                 $invoiceId,
                 $transactionId,
@@ -246,6 +260,12 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
                 $paymentFee,
                 $this->getDomainName()
             );
+
+            // Save payment method
+            foreach ($this->getTransactionFromInvoiceId($invoiceId) as $transaction){
+                $transaction->setAttribute("payment_method", $xenditInvoiceData["payment_method"]);
+                $transaction->save();
+            }
 
             logTransaction($this->getDomainName(), $_POST, $transactionStatus);
             return true;

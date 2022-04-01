@@ -53,7 +53,77 @@ function xendit_link($params)
  * This is a required function declaration. Denotes that the module should
  * not allow local card data input.
  */
-function xendit_nolocalcc() {}
+//function xendit_nolocalcc() {}
+
+/**
+ * Capture payment.
+ *
+ * Called when a payment is requested to be processed and captured.
+ *
+ * The CVV number parameter will only be present for card holder present
+ * transactions and when made against an existing stored payment token
+ * where new card data has not been entered.
+ *
+ * @param array $params Payment Gateway Module Parameters
+ *
+ * @see https://developers.whmcs.com/payment-gateways/remote-input-gateway/
+ *
+ * @return array
+ */
+function xendit_capture($params)
+{
+    // Capture Parameters
+    $remoteGatewayToken = $params['gatewayid'];
+
+    // A token is required for a remote input gateway capture attempt
+    if (!$remoteGatewayToken) {
+        return [
+            'status' => 'declined',
+            'decline_message' => 'No Remote Token',
+        ];
+    }
+
+    $xenditRequest = new \Xendit\Lib\XenditRequest();
+    $response = $xenditRequest->createCharge(
+        $xenditRequest->generateCCPaymentRequest($params)
+    );
+
+    if (!empty($response) && isset($response['status']) && $response['status'] == "CAPTURED") {
+
+        // Save transaction status
+        $xenditRecurring = new \Xendit\Lib\Recurring();
+        $transactions = $xenditRecurring->getTransactionFromInvoiceId($params["invoiceid"]);
+        if(!empty($transactions)){
+            foreach ($transactions as $transaction){
+                $transaction->setAttribute("status", "PAID");
+                $transaction->setAttribute("payment_method", "CREDIT_CARD");
+                $transaction->save();
+            }
+        }
+
+        return [
+            // 'success' if successful, otherwise 'declined', 'error' for failure
+            'status' => 'success',
+            // The unique transaction id for the payment
+            'transid' => $response['id'],
+            // Optional fee amount for the transaction
+            'fee' => 0,
+            // Return only if the token has updated or changed
+            'gatewayid' => $response['credit_card_token_id'],
+            // Data to be recorded in the gateway log - can be a string or array
+            'rawdata' => $response,
+        ];
+    }
+
+    return [
+        // 'success' if successful, otherwise 'declined', 'error' for failure
+        'status' => 'declined',
+        // For declines, a decline reason can optionally be returned
+        'declinereason' => $response['decline_reason'],
+        // Data to be recorded in the gateway log - can be a string or array
+        'rawdata' => $response,
+    ];
+}
 
 /**
  * Remote input.

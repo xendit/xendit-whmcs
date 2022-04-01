@@ -1,6 +1,7 @@
 <?php
 
 namespace Xendit\Lib;
+use \Xendit\Lib\Model\XenditTransaction;
 
 class Recurring extends \Xendit\Lib\ActionBase
 {

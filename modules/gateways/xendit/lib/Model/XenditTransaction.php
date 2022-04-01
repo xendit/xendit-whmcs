@@ -26,6 +26,7 @@ class XenditTransaction extends Model
         "relid",
         "type",
         "external_id",
-        "status"
+        "status",
+        "payment_method"
     ];
 }

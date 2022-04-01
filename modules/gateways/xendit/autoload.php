@@ -9,6 +9,18 @@ if (!defined('WHMCS_ROOT')) {
 
 spl_autoload_register(function ($className) {
     if (strpos($className, 'Xendit') !== false) {
-        require __DIR__ . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . str_replace('\\', '/', mb_strcut($className, 11)) . '.php';
+
+        $classPath = explode("\\", $className);
+        unset($classPath[0]);
+
+        try{
+            $filePath = __DIR__ . DIRECTORY_SEPARATOR . implode("/", array_map(function ($path){
+                    return $path == "Lib" ? strtolower($path) : $path;
+                }, $classPath)) . ".php";
+            if(file_exists($filePath)){
+                require $filePath;
+            }
+        }catch (Exception $e){
+        }
     }
 });

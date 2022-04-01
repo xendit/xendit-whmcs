@@ -147,8 +147,7 @@ class Link extends ActionBase
                     $this->updateTransactions($transactions);
                     $this->confirmInvoice(
                         $params["invoiceid"],
-                        $xenditInvoice,
-                        true
+                        $xenditInvoice
                     );
 
                     // Redirect to success page

@@ -79,6 +79,18 @@ class XenditRequest
     }
 
     /**
+     * @param int $invoiceId
+     * @param bool $retry
+     * @return string
+     */
+    protected function generateExternalId(int $invoiceId, bool $retry = false): string
+    {
+        $config = $this->getModuleConfig();
+        $externalPrefix = !empty($config["xenditExternalPrefix"]) ? $config["xenditExternalPrefix"] : "WHMCS-Xendit";
+        return !$retry ? sprintf("%s-%s", $externalPrefix, $invoiceId) : sprintf("%s-%s-%s", $externalPrefix, $invoiceId, microtime(true));
+    }
+
+    /**
      * @param string $body
      * @return false|string
      * @throws \Exception
@@ -87,7 +99,7 @@ class XenditRequest
     {
         $response = json_decode($body, true);
         if(isset($response["error_code"]) && !empty($response["error_code"])){
-            throw new \Exception("Error: %s - Code %s", $response["message"], $response["code"]);
+            throw new \Exception(sprintf("Error: %s - Code %s", $response["message"], $response["error_code"]));
         }
         return $response;
     }
@@ -148,6 +160,30 @@ class XenditRequest
     }
 
     /**
+     * @param array $params
+     * @return array
+     * @throws \Exception
+     */
+    public function generateCCPaymentRequest(array $params = [])
+    {
+        $invoice = $this->getInvoice($params["invoiceid"]);
+        if(empty($invoice))
+            throw new \Exception("Invoice does not exist");
+
+        return [
+            "amount" => $params["amount"],
+            "currency" => 'IDR',//$params["currency"],
+            "token_id" => $params["gatewayid"],
+            "external_id" => $this->generateExternalId($params["invoiceid"]),
+            "store_name" => "WHMCS Testing",
+            "items" => $this->extractItems($invoice),
+            "customer" => $this->extractCustomerDetail($params),
+            "is_recurring" => true,
+            "should_charge_multiple_use_token" => true
+        ];
+    }
+
+    /**
      * @param $payload
      * @return false|string
      * @throws \Exception
@@ -155,7 +191,7 @@ class XenditRequest
     public function createCharge($payload)
     {
         try {
-            $response = $this->request("POST", 'payment/xendit/credit-card/charges', [
+            $response = $this->request("POST", '/payment/xendit/credit-card/charges', [
                 'headers' => $this->defaultHeader(),
                 'body' => json_encode($payload)
             ]);
@@ -173,7 +209,7 @@ class XenditRequest
     public function getCardInfo(string $card_charge_id)
     {
         try {
-            $response = $this->request("GET", 'payment/xendit/credit-card/charges/' . $card_charge_id, [
+            $response = $this->request("GET", '/payment/xendit/credit-card/charges/' . $card_charge_id, [
                 'headers' => $this->defaultHeader()
             ]);
             return $this->processResponse($response);
@@ -190,7 +226,7 @@ class XenditRequest
     public function getCardTokenInfo(string $card_token)
     {
         try {
-            $response = $this->request("GET", 'payment/xendit/credit-card/token/' . $card_token, [
+            $response = $this->request("GET", '/payment/xendit/credit-card/token/' . $card_token, [
                 'headers' => $this->defaultHeader()
             ]);
             return $this->processResponse($response);

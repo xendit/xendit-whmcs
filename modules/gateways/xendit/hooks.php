@@ -8,33 +8,31 @@ use Xendit\Lib\Recurring;
  * @param $vars
  * @return void
  */
-function hookInvoiceCreated($vars)
+function hookInvoiceCreation($vars)
 {
     $xenditRecurring = new Recurring();
     $invoice = $xenditRecurring->getInvoice($vars['invoiceid']);
 
     // if payment method is Xendit
-    if($invoice->paymentmethod != $xenditRecurring->getDomainName()){
+    if ($invoice->paymentmethod != $xenditRecurring->getDomainName()) {
         return;
     }
-
-    // Set paymethodid is null
-    $invoice->setAttribute("paymethodid", null)->save();
 
     // Save xendit transaction
     $xenditRecurring->storeTransactions($vars['invoiceid']);
 
-    // Check if is recurring payment
-    if($xenditRecurring->isRecurring($vars['invoiceid'])){
+    // Check if it is recurring payment
+    if ($xenditRecurring->isRecurring($vars['invoiceid'])) {
         $previousInvoice = $xenditRecurring->getPreviousInvoice($vars['invoiceid']);
-        if(!empty($previousInvoice) && !empty($previousInvoice->paymethodid))
+
+        if (!empty($previousInvoice) && $xenditRecurring->isInvoiceUsedCreditCard($previousInvoice->id))
         {
             $invoice->setAttribute("paymethodid", $previousInvoice->paymethodid);
             $invoice->save();
-
             // Capture invoice payment
             $xenditRecurring->capture($invoice->id);
         }
     }
 }
-add_hook('InvoiceCreation', 1, 'hookInvoiceCreated');
+
+add_hook('InvoiceCreation', 1, 'hookInvoiceCreation');
