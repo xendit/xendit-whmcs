@@ -27,7 +27,7 @@ https://docs.whmcs.com/System_Requirements
 ## Configuration ##
 1. Access your WHMCS admin page.
 2. Go to menu Setup -> Payments -> Payment Gateways.
-3. There are will be `**Xendit Payment Gateway Module**`
+3. There are will be `Xendit Payment Gateway Module`
 4. Then choose Setup -> Payments -> Payment Gateways -> Manage Existing Gateways
 5. Put the `secretKey` and `publicKey` (Open Xendit Dashboard > Settings > API Keys > Generate Secret Key > Copy SecretKey & PublicKey)
 6. Click Save Changes

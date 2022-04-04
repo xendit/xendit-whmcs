@@ -12,6 +12,6 @@ modules/*
 modules/gateways/*
 !modules/gateways/xendit/
 !modules/gateways/xendit.php
-
-modules/gateways/callback
+!modules/gateways/callback/
+modules/gateways/callback/*
 !modules/gateways/callback/xendit.php
