@@ -49,7 +49,6 @@ class Link extends ActionBase
             'items' => $this->extractItems($invoice),
             'fees' => array(['type' => 'Payment Fee', 'value' => (float)$params['paymentfee']]),
             'amount' => $params['amount'] + (float)$params['paymentfee'],
-            'invoice_duration' => $params['expired'],
             'success_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),
             'failure_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),
             'should_charge_multiple_use_token' => true,
