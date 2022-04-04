@@ -148,7 +148,7 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
     {
         $config = $this->getXenditConfig();
         $externalPrefix = !empty($config["xenditExternalPrefix"]) ? $config["xenditExternalPrefix"] : "WHMCS-Xendit";
-        return !$retry ? sprintf("%s-%s", $externalPrefix, $invoiceId) : sprintf("%s-%s-%s", $externalPrefix, $invoiceId, microtime(true));
+        return !$retry ? sprintf("%s-%s", $externalPrefix, $invoiceId) : sprintf("%s-%s-%s", $externalPrefix, uniqid(), $invoiceId);
     }
 
     /**
@@ -183,14 +183,18 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
      * @param $transactions
      * @param string $transactionid
      * @param string $status
+     * @param string $external_id
      * @return bool
      * @throws \Exception
      */
-    public function updateTransactions($transactions, string $transactionid = "", string $status = "PAID")
+    public function updateTransactions($transactions, string $transactionid = "", string $status = "PAID", string $external_id = "")
     {
         try{
             foreach ($transactions as $transaction){
                 $transaction->setAttribute("status", $status);
+                if(!empty($external_id)){
+                    $transaction->setAttribute("external_id", $external_id);
+                }
                 if(!empty($transactionid)){
                     $transaction->setAttribute("transactionid", $transactionid);
                 }

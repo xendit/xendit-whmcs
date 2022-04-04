@@ -121,15 +121,15 @@ class Link extends ActionBase
 
             // If force create new invoice
             if($force){
-                $createInvoice = $this->xenditRequest->createInvoice(
-                    $this->generateInvoicePayload($params, true)
-                );
+                $payload = $this->generateInvoicePayload($params, true);
+                $createInvoice = $this->xenditRequest->createInvoice($payload);
                 $url = $createInvoice['invoice_url'];
 
                 $this->updateTransactions(
                     $transactions,
                     $createInvoice["id"],
-                    "PENDING"
+                    "PENDING",
+                    $payload["external_id"]
                 );
                 return $this->generateFormParam($params, $url);
             }

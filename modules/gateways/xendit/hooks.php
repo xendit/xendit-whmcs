@@ -23,11 +23,11 @@ add_hook('InvoiceCreation', 1, function ($vars){
     // Check if it is recurring payment
     if ($xenditRecurring->isRecurring($vars['invoiceid'])) {
         $previousInvoice = $xenditRecurring->getPreviousInvoice($vars['invoiceid']);
-
         if (!empty($previousInvoice) && $xenditRecurring->isInvoiceUsedCreditCard($previousInvoice->id))
         {
             $invoice->setAttribute("paymethodid", $previousInvoice->paymethodid);
             $invoice->save();
+
             // Capture invoice payment
             $xenditRecurring->capture($invoice->id);
         }
