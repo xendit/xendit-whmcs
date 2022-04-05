@@ -56,6 +56,7 @@ function xendit_link($params)
 //function xendit_nolocalcc() {}
 
 /**
+ *
  * Capture payment.
  *
  * Called when a payment is requested to be processed and captured.
@@ -64,11 +65,9 @@ function xendit_link($params)
  * transactions and when made against an existing stored payment token
  * where new card data has not been entered.
  *
- * @param array $params Payment Gateway Module Parameters
- *
- * @see https://developers.whmcs.com/payment-gateways/remote-input-gateway/
- *
- * @return array
+ * @param $params
+ * @return array|string[]
+ * @throws Exception
  */
 function xendit_capture($params)
 {
@@ -83,10 +82,23 @@ function xendit_capture($params)
         ];
     }
 
-    $xenditRequest = new \Xendit\Lib\XenditRequest();
-    $response = $xenditRequest->createCharge(
-        $xenditRequest->generateCCPaymentRequest($params)
-    );
+    // Generate payload
+    $cc = new \Xendit\Lib\CreditCard();
+    $payload = $cc->generateCCPaymentRequest($params);
+
+    try{
+        $xenditRequest = new \Xendit\Lib\XenditRequest();
+        $response = $xenditRequest->createCharge($payload);
+    }catch (\Exception $e){
+        return [
+            // 'success' if successful, otherwise 'declined', 'error' for failure
+            'status' => 'declined',
+            // For declines, a decline reason can optionally be returned
+            'declinereason' => $e->getMessage(),
+            // Data to be recorded in the gateway log - can be a string or array
+            'rawdata' => $payload,
+        ];
+    }
 
     if (!empty($response) && isset($response['status']) && $response['status'] == "CAPTURED") {
 
@@ -119,9 +131,9 @@ function xendit_capture($params)
         // 'success' if successful, otherwise 'declined', 'error' for failure
         'status' => 'declined',
         // For declines, a decline reason can optionally be returned
-        'declinereason' => $response['decline_reason'],
+        'declinereason' => $response['message'],
         // Data to be recorded in the gateway log - can be a string or array
-        'rawdata' => $response,
+        'rawdata' => $payload,
     ];
 }
 

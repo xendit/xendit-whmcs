@@ -49,7 +49,6 @@ class Link extends ActionBase
             'items' => $this->extractItems($invoice),
             'fees' => array(['type' => 'Payment Fee', 'value' => (float)$params['paymentfee']]),
             'amount' => $params['amount'] + (float)$params['paymentfee'],
-            'invoice_duration' => $params['expired'],
             'success_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),
             'failure_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),
             'should_charge_multiple_use_token' => true,
@@ -122,15 +121,15 @@ class Link extends ActionBase
 
             // If force create new invoice
             if($force){
-                $createInvoice = $this->xenditRequest->createInvoice(
-                    $this->generateInvoicePayload($params, true)
-                );
+                $payload = $this->generateInvoicePayload($params, true);
+                $createInvoice = $this->xenditRequest->createInvoice($payload);
                 $url = $createInvoice['invoice_url'];
 
                 $this->updateTransactions(
                     $transactions,
                     $createInvoice["id"],
-                    "PENDING"
+                    "PENDING",
+                    $payload["external_id"]
                 );
                 return $this->generateFormParam($params, $url);
             }

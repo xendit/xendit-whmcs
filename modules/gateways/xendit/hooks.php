@@ -8,8 +8,7 @@ use Xendit\Lib\Recurring;
  * @param $vars
  * @return void
  */
-function hookInvoiceCreation($vars)
-{
+add_hook('InvoiceCreation', 1, function ($vars){
     $xenditRecurring = new Recurring();
     $invoice = $xenditRecurring->getInvoice($vars['invoiceid']);
 
@@ -24,15 +23,13 @@ function hookInvoiceCreation($vars)
     // Check if it is recurring payment
     if ($xenditRecurring->isRecurring($vars['invoiceid'])) {
         $previousInvoice = $xenditRecurring->getPreviousInvoice($vars['invoiceid']);
-
         if (!empty($previousInvoice) && $xenditRecurring->isInvoiceUsedCreditCard($previousInvoice->id))
         {
             $invoice->setAttribute("paymethodid", $previousInvoice->paymethodid);
             $invoice->save();
+
             // Capture invoice payment
             $xenditRecurring->capture($invoice->id);
         }
     }
-}
-
-add_hook('InvoiceCreation', 1, 'hookInvoiceCreation');
+});
