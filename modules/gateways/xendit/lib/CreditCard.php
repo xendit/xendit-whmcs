@@ -45,7 +45,6 @@ class CreditCard extends \Xendit\Lib\ActionBase
         return $items;
     }
 
-
     /**
      * @param array $params
      * @return array

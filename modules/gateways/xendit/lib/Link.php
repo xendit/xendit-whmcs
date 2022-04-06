@@ -2,6 +2,8 @@
 
 namespace Xendit\Lib;
 
+use Xendit\Lib\Model\XenditTransaction;
+
 class Link extends ActionBase
 {
     /**
@@ -127,23 +129,25 @@ class Link extends ActionBase
 
                 $this->updateTransactions(
                     $transactions,
-                    $createInvoice["id"],
-                    "PENDING",
-                    $payload["external_id"]
+                    [
+                        'transactionid' => $createInvoice["id"],
+                        'status' => XenditTransaction::STATUS_PENDING,
+                        'external_id' => $payload["external_id"]
+                    ]
                 );
                 return $this->generateFormParam($params, $url);
             }
 
             // Get Xendit Invoice by transaction (Xendit invoice_id)
             $xenditInvoice = false;
-            if (!empty($transactions) && !empty($transactions[0]->transactionid)) {
+            if ($transactions->count() && !empty($transactions[0]->transactionid)) {
                 $xenditInvoice = $this->xenditRequest->getInvoiceById($transactions[0]->transactionid);
             }
 
             // Check xendit invoice status
             if (!empty($xenditInvoice)) {
                 if ($xenditInvoice['status'] == "EXPIRED") {
-                    $this->updateTransactions($transactions, "", "EXPIRED");
+                    $this->updateTransactions($transactions, ['status' => XenditTransaction::STATUS_EXPIRED]);
                     return $this->generatePaymentLink($params, true);
                 } else {
                     $url = $xenditInvoice['invoice_url'];
@@ -155,8 +159,10 @@ class Link extends ActionBase
                 $url = $createInvoice['invoice_url'];
                 $this->updateTransactions(
                     $transactions,
-                    $createInvoice["id"],
-                    "PENDING"
+                    [
+                        'transactionid' => $createInvoice["id"],
+                        'status' => XenditTransaction::STATUS_PENDING
+                    ]
                 );
             }
             return $this->generateFormParam($params, $url);

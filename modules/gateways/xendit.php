@@ -4,7 +4,6 @@
 require_once __DIR__ . '/../../includes/gatewayfunctions.php';
 
 require __DIR__ . '/xendit/autoload.php';
-require __DIR__ . '/xendit/hooks.php';
 
 use WHMCS\Billing\Invoice;
 
@@ -19,7 +18,9 @@ function xendit_MetaData()
 {
     return array(
         'DisplayName' => 'Xendit Payment Gateway',
-        'APIVersion' => '1.1'
+        'APIVersion' => '1.1',
+        'DisableLocalCreditCardInput' => true,
+        'TokenisedStorage' => false
     );
 }
 

@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class XenditTransaction extends Model
 {
+    const STATUS_PENDING = 'PENDING';
+    const STATUS_PAID = 'PAID';
+    const STATUS_EXPIRED = 'EXPIRED';
+
     /**
      * The table associated with the model.
      *
