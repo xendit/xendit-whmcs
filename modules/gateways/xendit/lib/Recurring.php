@@ -144,4 +144,9 @@ class Recurring extends \Xendit\Lib\ActionBase
     {
         return localAPI("CapturePayment", ["invoiceid" => $invoiceId]);
     }
+
+    public function setTransactionStatus()
+    {
+
+    }
 }

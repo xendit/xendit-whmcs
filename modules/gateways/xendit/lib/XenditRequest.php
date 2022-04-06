@@ -15,15 +15,6 @@ class XenditRequest
     }
 
     /**
-     * @param int $invoiceId
-     * @return mixed
-     */
-    protected function getInvoice(int $invoiceId)
-    {
-        return localAPI(/**command*/'GetInvoice', /**postData*/['invoiceid' => $invoiceId]);
-    }
-
-    /**
      * @param string $method
      * @param string $endpoint
      * @param array $param
@@ -76,18 +67,6 @@ class XenditRequest
         }
 
         return $default_header;
-    }
-
-    /**
-     * @param int $invoiceId
-     * @param bool $retry
-     * @return string
-     */
-    protected function generateExternalId(int $invoiceId, bool $retry = false): string
-    {
-        $config = $this->getModuleConfig();
-        $externalPrefix = !empty($config["xenditExternalPrefix"]) ? $config["xenditExternalPrefix"] : "WHMCS-Xendit";
-        return !$retry ? sprintf("%s-%s", $externalPrefix, $invoiceId) : sprintf("%s-%s-%s", $externalPrefix, $invoiceId, microtime(true));
     }
 
     /**
@@ -160,30 +139,6 @@ class XenditRequest
     }
 
     /**
-     * @param array $params
-     * @return array
-     * @throws \Exception
-     */
-    public function generateCCPaymentRequest(array $params = [])
-    {
-        $invoice = $this->getInvoice($params["invoiceid"]);
-        if(empty($invoice))
-            throw new \Exception("Invoice does not exist");
-
-        return [
-            "amount" => $params["amount"],
-            "currency" => 'IDR',//$params["currency"],
-            "token_id" => $params["gatewayid"],
-            "external_id" => $this->generateExternalId($params["invoiceid"]),
-            "store_name" => "WHMCS Testing",
-            "items" => $this->extractItems($invoice),
-            "customer" => $this->extractCustomerDetail($params),
-            "is_recurring" => true,
-            "should_charge_multiple_use_token" => true
-        ];
-    }
-
-    /**
      * @param $payload
      * @return false|string
      * @throws \Exception
@@ -233,47 +188,5 @@ class XenditRequest
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
-    }
-
-    /**
-     * @param array $param
-     * @return array[]
-     */
-    public function extractCustomerDetail(array $param = [])
-    {
-        $customerDetails = [
-            'first_name' => $param['clientdetails']['firstname'],
-            'last_name' => $param['clientdetails']['lastname'],
-            'email' => $param['clientdetails']['email'],
-            'phone_number' => $param['clientdetails']['phonenumber'],
-            'address_city' => $param['clientdetails']['city'],
-            'address_postal_code' => $param['clientdetails']['postcode'],
-            'address_line_1' => $param['clientdetails']['address1'],
-            'address_line_2' => $param['clientdetails']['address2'],
-            'address_state' => $param['clientdetails']['state'],
-            'address_country' => $param['clientdetails']['country'],
-        ];
-        return [
-            "billing_details" => $customerDetails,
-            "shipping_details" => $customerDetails
-        ];
-    }
-
-    /**
-     * @param $invoice
-     * @return array
-     */
-    public function extractItems($invoice): array
-    {
-        $items = array();
-        foreach ($invoice['items']['item'] as $item) {
-            $item_price = (float) $item['amount'];
-            $items[] = [
-                'quantity' => 1,
-                'name' => $item['description'],
-                'price' => $item_price,
-            ];
-        }
-        return $items;
     }
 }
