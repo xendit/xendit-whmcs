@@ -148,7 +148,7 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
     {
         $config = $this->getXenditConfig();
         $externalPrefix = !empty($config["xenditExternalPrefix"]) ? $config["xenditExternalPrefix"] : "WHMCS-Xendit";
-        return !$retry ? sprintf("%s-%s", $externalPrefix, $invoiceId) : sprintf("%s-%s-%s", $externalPrefix, $invoiceId, microtime(true));
+        return !$retry ? sprintf("%s-%s", $externalPrefix, $invoiceId) : sprintf("%s-%s-%s", $externalPrefix, uniqid(), $invoiceId);
     }
 
     /**
@@ -183,21 +183,25 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
      * @param $transactions
      * @param string $transactionid
      * @param string $status
+     * @param string $external_id
      * @return bool
      * @throws \Exception
      */
-    public function updateTransactions($transactions, string $transactionid = "", string $status = "PAID")
+    public function updateTransactions($transactions, string $transactionid = "", string $status = "PAID", string $external_id = "")
     {
-        try{
-            foreach ($transactions as $transaction){
+        try {
+            foreach ($transactions as $transaction) {
                 $transaction->setAttribute("status", $status);
-                if(!empty($transactionid)){
+                if (!empty($external_id)) {
+                    $transaction->setAttribute("external_id", $external_id);
+                }
+                if (!empty($transactionid)) {
                     $transaction->setAttribute("transactionid", $transactionid);
                 }
                 $transaction->save();
             }
             return true;
-        }catch (\Exception $exception){
+        } catch (\Exception $exception) {
             throw new \Exception($exception->getMessage());
         }
     }
@@ -208,7 +212,7 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
      */
     public function isInvoiceUsedCreditCard(int $invoiceId)
     {
-        $transaction =  XenditTransaction::where("invoiceid", $invoiceId)
+        $transaction = XenditTransaction::where("invoiceid", $invoiceId)
             ->where("payment_method", "CREDIT_CARD")
             ->get();
         return $transaction->count() > 0;
@@ -223,8 +227,8 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
      */
     public function confirmInvoice(int $invoiceId, array $xenditInvoiceData, bool $success = true)
     {
-        try{
-            if(!$success){
+        try {
+            if (!$success) {
                 return;
             }
 
@@ -234,11 +238,11 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
             $transactionStatus = 'Success';
 
             // Save credit card token
-            if(isset($xenditInvoiceData['credit_card_charge_id']) && isset($xenditInvoiceData['credit_card_token'])){
+            if (isset($xenditInvoiceData['credit_card_charge_id']) && isset($xenditInvoiceData['credit_card_token'])) {
                 $cardInfo = $this->xenditRequest->getCardInfo($xenditInvoiceData['credit_card_charge_id']);
                 $cardExpired = $this->xenditRequest->getCardTokenInfo($xenditInvoiceData['credit_card_token']);
 
-                if(!empty($cardInfo) && !empty($cardExpired)){
+                if (!empty($cardInfo) && !empty($cardExpired)) {
                     $lastDigit = substr($cardInfo["masked_card_number"], -4);
                     invoiceSaveRemoteCard(
                         $invoiceId,
@@ -262,14 +266,14 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
             );
 
             // Save payment method
-            foreach ($this->getTransactionFromInvoiceId($invoiceId) as $transaction){
+            foreach ($this->getTransactionFromInvoiceId($invoiceId) as $transaction) {
                 $transaction->setAttribute("payment_method", $xenditInvoiceData["payment_method"]);
                 $transaction->save();
             }
 
             logTransaction($this->getDomainName(), $_POST, $transactionStatus);
             return true;
-        }catch (\Exception $exception){
+        } catch (\Exception $exception) {
             throw new \Exception($exception->getMessage());
         }
     }

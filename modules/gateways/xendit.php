@@ -3,8 +3,8 @@
 //autoload gateway functions
 require_once __DIR__ . '/../../includes/gatewayfunctions.php';
 
-require __DIR__ .'/xendit/autoload.php';
-require __DIR__ .'/xendit/hooks.php';
+require __DIR__ . '/xendit/autoload.php';
+require __DIR__ . '/xendit/hooks.php';
 
 use WHMCS\Billing\Invoice;
 
@@ -23,7 +23,9 @@ function xendit_MetaData()
     );
 }
 
-function xendit_storeremote($params){}
+function xendit_storeremote($params)
+{
+}
 
 /**
  * @return array
@@ -56,6 +58,7 @@ function xendit_link($params)
 //function xendit_nolocalcc() {}
 
 /**
+ *
  * Capture payment.
  *
  * Called when a payment is requested to be processed and captured.
@@ -64,11 +67,9 @@ function xendit_link($params)
  * transactions and when made against an existing stored payment token
  * where new card data has not been entered.
  *
- * @param array $params Payment Gateway Module Parameters
- *
- * @see https://developers.whmcs.com/payment-gateways/remote-input-gateway/
- *
- * @return array
+ * @param $params
+ * @return array|string[]
+ * @throws Exception
  */
 function xendit_capture($params)
 {
@@ -83,18 +84,31 @@ function xendit_capture($params)
         ];
     }
 
-    $xenditRequest = new \Xendit\Lib\XenditRequest();
-    $response = $xenditRequest->createCharge(
-        $xenditRequest->generateCCPaymentRequest($params)
-    );
+    // Generate payload
+    $cc = new \Xendit\Lib\CreditCard();
+    $payload = $cc->generateCCPaymentRequest($params);
+
+    try {
+        $xenditRequest = new \Xendit\Lib\XenditRequest();
+        $response = $xenditRequest->createCharge($payload);
+    } catch (\Exception $e) {
+        return [
+            // 'success' if successful, otherwise 'declined', 'error' for failure
+            'status' => 'declined',
+            // For declines, a decline reason can optionally be returned
+            'declinereason' => $e->getMessage(),
+            // Data to be recorded in the gateway log - can be a string or array
+            'rawdata' => $payload,
+        ];
+    }
 
     if (!empty($response) && isset($response['status']) && $response['status'] == "CAPTURED") {
 
         // Save transaction status
         $xenditRecurring = new \Xendit\Lib\Recurring();
         $transactions = $xenditRecurring->getTransactionFromInvoiceId($params["invoiceid"]);
-        if(!empty($transactions)){
-            foreach ($transactions as $transaction){
+        if (!empty($transactions)) {
+            foreach ($transactions as $transaction) {
                 $transaction->setAttribute("status", "PAID");
                 $transaction->setAttribute("payment_method", "CREDIT_CARD");
                 $transaction->save();
@@ -119,9 +133,9 @@ function xendit_capture($params)
         // 'success' if successful, otherwise 'declined', 'error' for failure
         'status' => 'declined',
         // For declines, a decline reason can optionally be returned
-        'declinereason' => $response['decline_reason'],
+        'declinereason' => $response['message'],
         // Data to be recorded in the gateway log - can be a string or array
-        'rawdata' => $response,
+        'rawdata' => $payload,
     ];
 }
 
@@ -137,9 +151,9 @@ function xendit_capture($params)
  *
  * @param array $params Payment Gateway Module Parameters
  *
+ * @return array
  * @see https://developers.whmcs.com/payment-gateways/remote-input-gateway/
  *
- * @return array
  */
 function xendit_remoteinput($params)
 {
@@ -160,19 +174,82 @@ function xendit_remoteinput($params)
  *
  * @param array $params Payment Gateway Module Parameters
  *
+ * @return array
+ * @throws Exception
  * @see https://developers.whmcs.com/payment-gateways/remote-input-gateway/
  *
- * @return array
  */
 function xendit_remoteupdate($params)
 {
-    if(strpos($_REQUEST["rp"], "/admin/") !== FALSE){
+    if (strpos($_REQUEST["rp"], "/admin/") !== FALSE) {
         return <<<HTML
 <div class="alert alert-info text-center">
     Updating your card/bank is not possible. Please create a new Pay Method to make changes.
 </div>
 HTML;
     }
+
+    // Gateway Configuration Parameters
+    $publicKey = $params['xenditTestMode'] == 'on' ? $params['xenditTestPublicKey'] : $params['xenditPublicKey'];
+    $secretKey = $params['xenditTestMode'] == 'on' ? $params['xenditTestSecretKey'] : $params['xenditSecretKey'];
+    $remoteStorageToken = $params['gatewayid'];
+
+    // Client Parameters
+    $clientId = $params['client_id'];
+    $payMethodId = $params['paymethodid'];
+    $card_expired_date = (new DateTime($params['payMethod']->payment->expiry_date));
+
+    // System Parameters
+    $systemUrl = $params['systemurl'];
+
+    // Build a form which can be submitted to an iframe target to render
+    // the payment form.
+    $formAction = $systemUrl . 'modules/gateways/xendit/handler/updatecc.php';
+    $formFields = [
+        'public_key' => $publicKey,
+        'secret_key' => $secretKey,
+        'card_token' => $remoteStorageToken,
+        'card_number' => sprintf("**** **** **** %s", $params['payMethod']->payment->last_four),
+        'card_expiry_date' => sprintf("%s / %s", $card_expired_date->format("m"), substr($card_expired_date->format("Y"), -2)),
+        'action' => 'updatecc',
+        'invoice_id' => 0,
+        'amount' => 1,
+        'currency' => 'IDR',
+        'customer_id' => $clientId,
+        'return_url' => $systemUrl . 'modules/gateways/callback/xendit.php',
+        'verification_hash' => sha1(
+            implode('|', [
+                $publicKey,
+                $clientId,
+                0, // Invoice ID - there is no invoice for an update
+                1, // Amount - there is no amount when updating
+                'IDR', // Currency Code - there is no currency when updating
+                $secretKey
+            ])
+        ),
+        // The PayMethod ID will need to be available in the callback file after
+        // update. We will pass a custom variable here to enable that.
+        'custom_reference' => $payMethodId,
+    ];
+
+    $formOutput = '';
+    foreach ($formFields as $key => $value) {
+        $formOutput .= '<input type="hidden" name="' . $key . '" value="' . $value . '">' . PHP_EOL;
+    }
+
+    // This is a working example which posts to the file: demo/remote-iframe-demo.php
+    return '<div id="frmRemoteCardProcess" class="text-center">
+    <form method="post" action="' . $formAction . '" target="remoteUpdateIFrame">
+        ' . $formOutput . '
+        <noscript>
+            <input type="submit" value="Click here to continue &raquo;">
+        </noscript>
+    </form>
+    <iframe name="remoteUpdateIFrame" class="auth3d-area" width="90%" height="600" scrolling="auto" src="about:blank"></iframe>
+</div>
+<script>
+    setTimeout("autoSubmitFormByContainer(\'frmRemoteCardProcess\')", 1000);
+</script>';
 }
 
 /**
