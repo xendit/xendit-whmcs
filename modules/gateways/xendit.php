@@ -199,3 +199,55 @@ HTML;
 function xendit_adminstatusmsg($params)
 {
 }
+
+/**
+ * Refund transaction.
+ *
+ * Called when a refund is requested for a previously successful transaction.
+ *
+ * @param array $params Payment Gateway Module Parameters
+ *
+ * @see https://developers.whmcs.com/payment-gateways/refunds/
+ *
+ * @return array Transaction response status
+ */
+function xendit_refund($params)
+{
+    // Transaction Parameters
+    $transactionIdToRefund = $params['transid'];
+    $refundAmount = $params['amount'];
+
+    // System Parameters
+    $companyName = $params['companyname'];
+
+    // perform API call to initiate refund and interpret result
+    $xenditRequest = new \Xendit\Lib\XenditRequest();
+    $invoiceResponse = $xenditRequest->getInvoiceById($transactionIdToRefund);
+    $chargeId = $invoiceResponse['credit_card_charge_id'];
+
+    $body = array(
+        'store_name'    => $companyName,
+        'external_id'   => 'whmcs-refund-' . uniqid(),
+        'amount'        => $refundAmount
+    );
+
+    $refundResponse = $xenditRequest->createRefund($chargeId, $body);
+
+    if ($refundResponse['status'] === 'FAILED') {
+        return array(
+            'status' => 'declined',
+            'rawdata' => $refundResponse,
+            // Unique Transaction ID for the refund transaction
+            'transid' => $refundResponse['id'],
+        );
+    }
+
+    return array(
+        // 'success' if successful, otherwise 'declined', 'error' for failure
+        'status' => 'success',
+        // Data to be recorded in the gateway log - can be a string or array
+        'rawdata' => $refundResponse,
+        // Unique Transaction ID for the refund transaction
+        'transid' => $refundResponse['id'],
+    );
+}
