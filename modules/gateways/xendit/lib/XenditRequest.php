@@ -103,6 +103,27 @@ class XenditRequest
     }
 
     /**
+     * @param string $chargeId
+     * @param array $payload
+     * @return object json
+     * @throws \Exception
+     */
+    public function createRefund(string $chargeId, array $payload = [])
+    {
+        try{
+            $response = $this->request(
+                "POST",
+                '/payment/xendit/credit-card/charges/' . $chargeId . '/refund', [
+                'headers' => $this->defaultHeader(),
+                'body' => json_encode($payload)
+            ]);
+            return $this->processResponse($response);
+        }catch (\Exception $e){
+            throw new \Exception($e->getMessage());
+        }
+    }
+
+    /**
      * @param array $param
      * @return false|string
      * @throws \Exception
