@@ -225,6 +225,13 @@ function xendit_refund($params)
     $invoiceResponse = $xenditRequest->getInvoiceById($transactionIdToRefund);
     $chargeId = $invoiceResponse['credit_card_charge_id'];
 
+    if(empty($chargeId)) {
+        return array(
+            'status'    => 'error',
+            'rawdata'   => 'Can not refund the payment because because it is not credit card transaction'
+        );
+    }
+
     $body = array(
         'store_name'    => $companyName,
         'external_id'   => 'whmcs-refund-' . uniqid(),
