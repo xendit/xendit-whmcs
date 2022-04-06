@@ -45,7 +45,6 @@ class CreditCard extends \Xendit\Lib\ActionBase
         return $items;
     }
 
-
     /**
      * @param array $params
      * @return array
@@ -69,5 +68,4 @@ class CreditCard extends \Xendit\Lib\ActionBase
             "should_charge_multiple_use_token" => true
         ];
     }
-
 }

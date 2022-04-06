@@ -4,7 +4,7 @@ namespace Xendit\Lib;
 
 use WHMCS\Database\Capsule;
 use Illuminate\Database\Query\Builder as QueryBuilder;
-use \Xendit\Lib\Model\XenditTransaction;
+use Xendit\Lib\Model\XenditTransaction;
 use Xendit\Lib\XenditRequest;
 
 use WHMCS\Billing\Invoice;
@@ -181,27 +181,22 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
 
     /**
      * @param $transactions
-     * @param string $transactionid
-     * @param string $status
-     * @param string $external_id
+     * @param array $attributes
      * @return bool
      * @throws \Exception
      */
-    public function updateTransactions($transactions, string $transactionid = "", string $status = "PAID", string $external_id = "")
+    public function updateTransactions($transactions, array $attributes = []): bool
     {
-        try{
-            foreach ($transactions as $transaction){
-                $transaction->setAttribute("status", $status);
-                if(!empty($external_id)){
-                    $transaction->setAttribute("external_id", $external_id);
-                }
-                if(!empty($transactionid)){
-                    $transaction->setAttribute("transactionid", $transactionid);
+        try {
+            /** @var XenditTransaction $transaction */
+            foreach ($transactions as $transaction) {
+                foreach ($attributes as $attribute => $value) {
+                    $transaction->setAttribute($attribute, $value);
                 }
                 $transaction->save();
             }
             return true;
-        }catch (\Exception $exception){
+        } catch (\Exception $exception) {
             throw new \Exception($exception->getMessage());
         }
     }
@@ -210,9 +205,9 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
      * @param int $invoiceId
      * @return bool
      */
-    public function isInvoiceUsedCreditCard(int $invoiceId)
+    public function isInvoiceUsedCreditCard(int $invoiceId): bool
     {
-        $transaction =  XenditTransaction::where("invoiceid", $invoiceId)
+        $transaction = XenditTransaction::where("invoiceid", $invoiceId)
             ->where("payment_method", "CREDIT_CARD")
             ->get();
         return $transaction->count() > 0;
@@ -225,11 +220,11 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
      * @return bool
      * @throws \Exception
      */
-    public function confirmInvoice(int $invoiceId, array $xenditInvoiceData, bool $success = true)
+    public function confirmInvoice(int $invoiceId, array $xenditInvoiceData, bool $success = true): bool
     {
-        try{
-            if(!$success){
-                return;
+        try {
+            if (!$success) {
+                return false;
             }
 
             $transactionId = $xenditInvoiceData['id'];
@@ -238,11 +233,11 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
             $transactionStatus = 'Success';
 
             // Save credit card token
-            if(isset($xenditInvoiceData['credit_card_charge_id']) && isset($xenditInvoiceData['credit_card_token'])){
+            if (isset($xenditInvoiceData['credit_card_charge_id']) && isset($xenditInvoiceData['credit_card_token'])) {
                 $cardInfo = $this->xenditRequest->getCardInfo($xenditInvoiceData['credit_card_charge_id']);
                 $cardExpired = $this->xenditRequest->getCardTokenInfo($xenditInvoiceData['credit_card_token']);
 
-                if(!empty($cardInfo) && !empty($cardExpired)){
+                if (!empty($cardInfo) && !empty($cardExpired)) {
                     $lastDigit = substr($cardInfo["masked_card_number"], -4);
                     invoiceSaveRemoteCard(
                         $invoiceId,
@@ -266,14 +261,19 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
             );
 
             // Save payment method
-            foreach ($this->getTransactionFromInvoiceId($invoiceId) as $transaction){
-                $transaction->setAttribute("payment_method", $xenditInvoiceData["payment_method"]);
-                $transaction->save();
+            $transactions = $this->getTransactionFromInvoiceId($invoiceId);
+            if (!empty($transactions)) {
+                $this->updateTransactions($transactions,
+                    [
+                        "status" => XenditTransaction::STATUS_PAID,
+                        "payment_method" => $xenditInvoiceData["payment_method"]
+                    ]
+                );
             }
 
             logTransaction($this->getDomainName(), $_POST, $transactionStatus);
             return true;
-        }catch (\Exception $exception){
+        } catch (\Exception $exception) {
             throw new \Exception($exception->getMessage());
         }
     }

@@ -4,18 +4,19 @@ namespace Xendit\Lib\Model;
 
 use Illuminate\Database\Eloquent\Model;
 
-class XenditTransaction extends Model
+class CreditCard extends Model
 {
-    const STATUS_PENDING = 'PENDING';
-    const STATUS_PAID = 'PAID';
-    const STATUS_EXPIRED = 'EXPIRED';
+    const CARD_LABEL = [
+        'visa'          => 'Visa',
+        'mastercard'    => 'MasterCard'
+    ];
 
     /**
      * The table associated with the model.
      *
      * @var string
      */
-    protected $table = 'xendit_transactions';
+    protected $table = 'tblcreditcards';
 
     /**
      * The primary key associated with the table.
@@ -25,12 +26,9 @@ class XenditTransaction extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
-        "invoiceid",
-        "orderid",
-        "relid",
-        "type",
-        "external_id",
-        "status",
-        "payment_method"
+        "pay_method_id",
+        "card_type",
+        "last_four",
+        "expired_date"
     ];
 }
