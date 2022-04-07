@@ -55,7 +55,7 @@ function xendit_link($params)
  * This is a required function declaration. Denotes that the module should
  * not allow local card data input.
  */
-function xendit_nolocalcc() {}
+//function xendit_nolocalcc() {}
 
 /**
  *
