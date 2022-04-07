@@ -1,9 +1,10 @@
 <?php
+
 namespace Xendit\Lib;
 
 class XenditRequest
 {
-    protected $tpi_server_domain  = "https://tpi.xendit.co";
+    protected $tpi_server_domain = "https://tpi.xendit.co";
     protected $for_user_id;
 
     /**
@@ -56,8 +57,8 @@ class XenditRequest
             'x-plugin-version: 1.0.1'
         );
         $default_header[] = "authorization-type: ApiKey";
-        $default_header[] = 'Authorization: Basic '.base64_encode(
-                ($gatewayParams["xenditTestMode"] == "on" ? $gatewayParams["xenditTestSecretKey"] : $gatewayParams["xenditSecretKey"]).':'
+        $default_header[] = 'Authorization: Basic ' . base64_encode(
+                ($gatewayParams["xenditTestMode"] == "on" ? $gatewayParams["xenditTestSecretKey"] : $gatewayParams["xenditSecretKey"]) . ':'
             );
         if (!empty($version)) {
             $default_header[] = 'x-api-version: ' . $version;
@@ -77,7 +78,7 @@ class XenditRequest
     protected function processResponse(string $body)
     {
         $response = json_decode($body, true);
-        if(isset($response["error_code"]) && !empty($response["error_code"])){
+        if (isset($response["error_code"]) && !empty($response["error_code"])) {
             throw new \Exception(sprintf("Error: %s - Code %s", $response["message"], $response["error_code"]));
         }
         return $response;
@@ -90,14 +91,14 @@ class XenditRequest
      */
     public function getInvoiceById(string $invoice_id)
     {
-        try{
+        try {
             $response = $this->request(
                 "GET",
                 '/payment/xendit/invoice/' . $invoice_id, [
                 'headers' => $this->defaultHeader()
             ]);
             return $this->processResponse($response);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
     }
@@ -109,13 +110,13 @@ class XenditRequest
      */
     public function createInvoice(array $param = [])
     {
-        try{
+        try {
             $response = $this->request("POST", '/payment/xendit/invoice', [
                 'headers' => $this->defaultHeader(),
                 'body' => json_encode($param)
             ]);
             return $this->processResponse($response);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
     }
@@ -182,6 +183,38 @@ class XenditRequest
     {
         try {
             $response = $this->request("GET", '/payment/xendit/credit-card/token/' . $card_token, [
+                'headers' => $this->defaultHeader()
+            ]);
+            return $this->processResponse($response);
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
+    }
+
+    /**
+     * @return false|string
+     * @throws \Exception
+     */
+    public function getCCSettings()
+    {
+        try {
+            $response = $this->request("GET", '/payment/xendit/settings/credit-card', [
+                'headers' => $this->defaultHeader()
+            ]);
+            return $this->processResponse($response);
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
+    }
+
+    /**
+     * @return false|string
+     * @throws \Exception
+     */
+    public function getMIDSettings()
+    {
+        try {
+            $response = $this->request("GET", '/payment/xendit/settings/mid', [
                 'headers' => $this->defaultHeader()
             ]);
             return $this->processResponse($response);

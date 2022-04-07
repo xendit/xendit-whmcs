@@ -35,11 +35,11 @@ class CreditCard extends \Xendit\Lib\ActionBase
     public function extractItems($invoice): array
     {
         $items = array();
-        foreach ($invoice->items()->get() as $item){
+        foreach ($invoice->items()->get() as $item) {
             $items[] = [
                 'quantity' => 1,
                 'name' => $item->description,
-                'price' => (float) $item->amount,
+                'price' => (float)$item->amount,
             ];
         }
         return $items;
@@ -47,18 +47,20 @@ class CreditCard extends \Xendit\Lib\ActionBase
 
     /**
      * @param array $params
+     * @param int|null $auth_id
+     * @param int|null $cvn
      * @return array
      * @throws \Exception
      */
-    public function generateCCPaymentRequest(array $params = [])
+    public function generateCCPaymentRequest(array $params = [], int $auth_id = null, int $cvn = null): array
     {
         $invoice = $this->getInvoice($params["invoiceid"]);
-        if(empty($invoice))
+        if (empty($invoice))
             throw new \Exception("Invoice does not exist");
 
-        return [
+        $payload = [
             "amount" => $params["amount"],
-            "currency" => "IDR",//$params["currency"],
+            "currency" => $params["currency"],
             "token_id" => $params["gatewayid"],
             "external_id" => $this->generateExternalId($params["invoiceid"]),
             "store_name" => "WHMCS Testing",
@@ -67,5 +69,25 @@ class CreditCard extends \Xendit\Lib\ActionBase
             "is_recurring" => true,
             "should_charge_multiple_use_token" => true
         ];
+
+        if (!empty($auth_id)) {
+            $payload["authentication_id"] = $auth_id;
+        }
+        if (!empty($cvn)) {
+            $payload["card_cvn"] = $cvn;
+        }
+        return $payload;
+    }
+
+    /**
+     * @return false|string
+     * @throws \Exception
+     */
+    public function getCardSetting()
+    {
+        $ccSettings = $this->xenditRequest->getCCSettings();
+        $midSettings = $this->xenditRequest->getMIDSettings();
+        $ccSettings['supported_card_brands'] = !empty($midSettings['supported_card_brands']) ? $midSettings['supported_card_brands'] : array();
+        return $ccSettings;
     }
 }

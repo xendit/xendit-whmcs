@@ -6,6 +6,9 @@ require_once __DIR__ . '/../../includes/gatewayfunctions.php';
 require __DIR__ . '/xendit/autoload.php';
 
 use WHMCS\Billing\Invoice;
+use Xendit\Lib\Model\XenditTransaction;
+use Xendit\Lib\Recurring;
+use Xendit\Lib\XenditRequest;
 
 if (!defined("WHMCS")) {
     die("This file cannot be accessed directly");
@@ -20,12 +23,8 @@ function xendit_MetaData()
         'DisplayName' => 'Xendit Payment Gateway',
         'APIVersion' => '1.1',
         'DisableLocalCreditCardInput' => true,
-        'TokenisedStorage' => false
+        'TokenisedStorage' => true
     );
-}
-
-function xendit_storeremote($params)
-{
 }
 
 /**
@@ -56,7 +55,7 @@ function xendit_link($params)
  * This is a required function declaration. Denotes that the module should
  * not allow local card data input.
  */
-//function xendit_nolocalcc() {}
+function xendit_nolocalcc() {}
 
 /**
  *
@@ -90,7 +89,7 @@ function xendit_capture($params)
     $payload = $cc->generateCCPaymentRequest($params);
 
     try {
-        $xenditRequest = new \Xendit\Lib\XenditRequest();
+        $xenditRequest = new XenditRequest();
         $response = $xenditRequest->createCharge($payload);
     } catch (\Exception $e) {
         return [
@@ -106,14 +105,16 @@ function xendit_capture($params)
     if (!empty($response) && isset($response['status']) && $response['status'] == "CAPTURED") {
 
         // Save transaction status
-        $xenditRecurring = new \Xendit\Lib\Recurring();
+        $xenditRecurring = new Recurring();
         $transactions = $xenditRecurring->getTransactionFromInvoiceId($params["invoiceid"]);
-        if (!empty($transactions)) {
-            foreach ($transactions as $transaction) {
-                $transaction->setAttribute("status", "PAID");
-                $transaction->setAttribute("payment_method", "CREDIT_CARD");
-                $transaction->save();
-            }
+        if(!empty($transactions)){
+            $xenditRecurring->updateTransactions(
+                $transactions,
+                [
+                    "status" => XenditTransaction::STATUS_PAID,
+                    "payment_method" => "CREDIT_CARD"
+                ]
+            );
         }
 
         return [
@@ -152,13 +153,17 @@ function xendit_capture($params)
  *
  * @param array $params Payment Gateway Module Parameters
  *
- * @return array
+ * @return string
  * @see https://developers.whmcs.com/payment-gateways/remote-input-gateway/
  *
  */
 function xendit_remoteinput($params)
 {
-
+    return <<<HTML
+<div class="alert alert-info text-center">
+    Create new Credit card is not possible.
+</div>
+HTML;
 }
 
 /**

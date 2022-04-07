@@ -2,6 +2,7 @@
 
 use Xendit\Lib\Callback;
 use Xendit\Lib\Model\CreditCard;
+use Xendit\Lib\XenditRequest;
 
 require_once __DIR__ . '/../../../init.php';
 require_once __DIR__ . '/../../../includes/gatewayfunctions.php';
@@ -10,6 +11,8 @@ require_once __DIR__ . '/../../../includes/invoicefunctions.php';
 require_once __DIR__ . '/../xendit/autoload.php';
 
 $callback = new Callback();
+$creditCard = new \Xendit\lib\CreditCard();
+
 $gatewayModuleName = basename(__FILE__, '.php');
 $gatewayParams = getGatewayVariables($gatewayModuleName);
 
@@ -21,7 +24,7 @@ if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'updatecc') {
     // Retrieve data returned in redirect
     $invoiceId = $_REQUEST['invoice_id'] ?? '';
     $customerId = $_REQUEST['customer_id'] ?? '';
-    $amount = $_REQUEST['amount'] ?? '';
+    $amount = $_REQUEST['amount'] ?? 1;
     $fees = $_REQUEST['fees'] ?? '';
     $currencyCode = $_REQUEST['currency'] ?? '';
     $transactionId = $_REQUEST['transaction_id'] ?? '';

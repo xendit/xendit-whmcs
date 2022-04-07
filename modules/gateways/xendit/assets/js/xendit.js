@@ -257,16 +257,7 @@ jQuery(function ($) {
             }
             var token_id = response.id;
             cc_xendit_form.form.append("<input type='hidden' class='xendit_cc_hidden_input' name='xendit_token' value='" + token_id + "'/>");
-
-            var data = {
-                "token_id": token_id
-            };
-
-            if (xenditParam.can_use_dynamic_3ds === "1") {
-                Xendit.card.threeDSRecommendation(data, cc_xendit_form.on3DSRecommendationResponse);
-            } else {
-                cc_xendit_form.form.submit();
-            }
+            cc_xendit_form.form.submit();
 
             // Prevent form submitting
             return false;
@@ -276,18 +267,6 @@ jQuery(function ($) {
             $('.xendit_cc_hidden_input').remove();
         },
 
-        on3DSRecommendationResponse: function (err, response) {
-            if (err) {
-                cc_xendit_form.form.submit();
-                return false;
-            }
-            cc_xendit_form.form.append("<input type='hidden' class='xendit_cc_hidden_input' name='xendit_should_3ds' value='" + response.should_3ds + "'/>");
-            cc_xendit_form.form.submit();
-
-            return;
-        },
-
-        /* getting card type from WC card input class name */
         getCardType: function () {
             var class_names = $('#inputCardNumber').attr('class').split(' ');
             var index = class_names.indexOf('identified');
