@@ -6,6 +6,9 @@ use Xendit\Lib\Model\XenditTransaction;
 
 class Link extends ActionBase
 {
+    /** @var string $callbackUrl */
+    protected $callbackUrl = 'modules/gateways/callback/xendit.php';
+
     /**
      * @param \WHMCS\Billing\Invoice $invoice
      * @return array
@@ -51,6 +54,8 @@ class Link extends ActionBase
             'items' => $this->extractItems($invoice),
             'fees' => array(['type' => 'Payment Fee', 'value' => (float)$params['paymentfee']]),
             'amount' => $params['amount'] + (float)$params['paymentfee'],
+            'client_type' => 'INTEGRATION',
+            'platform_callback_url' => $params["systemurl"] . $this->callbackUrl,
             'success_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),
             'failure_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),
             'should_charge_multiple_use_token' => true,
