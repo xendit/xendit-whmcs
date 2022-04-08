@@ -69,12 +69,33 @@ class Link extends ActionBase
     }
 
     /**
+     * Check if Referer URL from card
+     *
+     * @return bool
+     */
+    protected function isRefererUrlFromCart(): bool
+    {
+        if(isset($_SERVER["HTTP_REFERER"])){
+            $uri = parse_url($_SERVER['HTTP_REFERER']);
+            if(ltrim($uri["path"], "/") == "cart.php"){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * @param array $params
      * @param string $invoiceUrl
      * @return string
      */
     protected function generateFormParam(array $params, string $invoiceUrl = "")
     {
+        if($this->isRefererUrlFromCart()){
+            header("Location: " . $invoiceUrl );
+            exit();
+        }
+
         $postfields = array();
         $postfields['invoice_id'] = $params['invoiceid'];
         $postfields['description'] = $params["description"];
@@ -93,7 +114,7 @@ class Link extends ActionBase
         $postfields['callback_url'] = $params['systemurl'] . '/modules/gateways/callback/' . $this->getDomainName() . '.php';
         $postfields['return_url'] = $params['returnurl'];
 
-        $htmlOutput = '<form method="post" action="' . $invoiceUrl . '">';
+        $htmlOutput = '<form id="frm-xendit" method="post" action="' . $invoiceUrl . '">';
         foreach ($postfields as $k => $v) {
             $htmlOutput .= '<input type="hidden" name="' . $k . '" value="' . urlencode($v) . '" />';
         }
