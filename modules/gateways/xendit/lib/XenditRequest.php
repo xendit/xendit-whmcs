@@ -4,7 +4,6 @@ namespace Xendit\Lib;
 class XenditRequest
 {
     protected $tpi_server_domain  = "https://tpi.xendit.co";
-    protected $for_user_id;
 
     /**
      * @return mixed
@@ -55,15 +54,11 @@ class XenditRequest
             'x-plugin-name: WHMCS',
             'x-plugin-version: 1.0.1'
         );
-        $default_header[] = "authorization-type: ApiKey";
         $default_header[] = 'Authorization: Basic '.base64_encode(
                 ($gatewayParams["xenditTestMode"] == "on" ? $gatewayParams["xenditTestSecretKey"] : $gatewayParams["xenditSecretKey"]).':'
             );
         if (!empty($version)) {
             $default_header[] = 'x-api-version: ' . $version;
-        }
-        if ($this->for_user_id) {
-            $default_header[] = 'for-user-id: ' . $this->for_user_id;
         }
 
         return $default_header;
