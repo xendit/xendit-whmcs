@@ -1,5 +1,4 @@
 <?php
-
 use Xendit\Lib\Callback;
 use Xendit\Lib\Model\CreditCard;
 use Xendit\Lib\XenditRequest;
@@ -7,7 +6,6 @@ use Xendit\Lib\XenditRequest;
 require_once __DIR__ . '/../../../init.php';
 require_once __DIR__ . '/../../../includes/gatewayfunctions.php';
 require_once __DIR__ . '/../../../includes/invoicefunctions.php';
-
 require_once __DIR__ . '/../xendit/autoload.php';
 
 $callback = new Callback();
@@ -16,6 +14,12 @@ $creditCard = new \Xendit\lib\CreditCard();
 $gatewayModuleName = basename(__FILE__, '.php');
 $gatewayParams = getGatewayVariables($gatewayModuleName);
 
+// Die if module is not active.
+if (!$gatewayParams['type']) {
+    die("Module Not Activated");
+}
+
+// Update credit card
 if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'updatecc') {
 
     $publicKey = $gatewayParams['xenditTestMode'] == 'on' ? $gatewayParams['xenditTestPublicKey'] : $gatewayParams['xenditPublicKey'];
@@ -27,7 +31,6 @@ if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'updatecc') {
     $amount = $_REQUEST['amount'] ?? 1;
     $fees = $_REQUEST['fees'] ?? '';
     $currencyCode = $_REQUEST['currency'] ?? '';
-    $transactionId = $_REQUEST['transaction_id'] ?? '';
     $cardNumber = $_REQUEST['xendit_card_number'] ?? '';
     $cardType = $_REQUEST['xendit_card_type'] ?? '';
     $cardExpMonth = $_REQUEST['xendit_card_exp_month'] ?? '';
@@ -65,7 +68,7 @@ if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'updatecc') {
             );
 
             // Update last 4 digits
-            CreditCard::where('pay_method_id', $payMethodId)->update([
+            \Xendit\Lib\Model\CreditCard::where('pay_method_id', $payMethodId)->update([
                 'last_four' => substr($cardNumber, -4, 4),
                 'card_type' => CreditCard::CARD_LABEL[$cardType] ?? $cardType
             ]);
@@ -109,25 +112,29 @@ if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'updatecc') {
         exit;
     }
 } else {
-
     // use for callback
-    $rawRequestInput = file_get_contents("php://input");
-    $arrRequestInput = json_decode($rawRequestInput, true);
+    $arrRequestInput = json_decode(file_get_contents("php://input"), true);
+    if (
+        !empty($arrRequestInput)
+        && isset($arrRequestInput['external_id'])
+        && !empty($arrRequestInput['external_id'])
+    ) {
+        $invoiceId = $callback->getInvoiceIdFromExternalId($arrRequestInput['external_id']);
+        $transactions = $callback->getTransactionFromInvoiceId($invoiceId);
 
-    $externalId = explode("-", $arrRequestInput['external_id']);
-    $invoiceId = trim(end($externalId));
-    $transactions = $callback->getTransactionFromInvoiceId($invoiceId);
-
-    try {
-        $result = $callback->confirmInvoice(
-            $invoiceId,
-            $arrRequestInput,
-            $arrRequestInput["status"] == "PAID"
-        );
-        if ($result) {
-            $callback->updateTransactions($transactions);
+        try {
+            $result = $callback->confirmInvoice(
+                $invoiceId,
+                $arrRequestInput,
+                $arrRequestInput["status"] == "PAID"
+            );
+            if ($result) {
+                $callback->updateTransactions($transactions);
+                echo 'Success';
+                exit;
+            }
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
         }
-    } catch (\Exception $e) {
-        throw new \Exception($e->getMessage());
     }
 }
