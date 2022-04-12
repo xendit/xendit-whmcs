@@ -1,77 +1,57 @@
 <?php
-
-use Xendit\Lib\Callback;
-use Xendit\Lib\Model\CreditCard;
-use Xendit\Lib\XenditRequest;
-
 require_once __DIR__ . '/../../../init.php';
 require_once __DIR__ . '/../../../includes/gatewayfunctions.php';
 require_once __DIR__ . '/../../../includes/invoicefunctions.php';
-
 require_once __DIR__ . '/../xendit/autoload.php';
 
+use Xendit\Lib\Callback;
+use \Xendit\lib\CreditCard;
+use Xendit\Lib\XenditRequest;
+
 $callback = new Callback();
-$creditCard = new \Xendit\lib\CreditCard();
+$creditCard = new CreditCard();
+$xenditRequest = new XenditRequest();
 
 $gatewayModuleName = basename(__FILE__, '.php');
 $gatewayParams = getGatewayVariables($gatewayModuleName);
+$action = $_REQUEST['action'] ?? "";
 
-if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'updatecc') {
-
-    $publicKey = $gatewayParams['xenditTestMode'] == 'on' ? $gatewayParams['xenditTestPublicKey'] : $gatewayParams['xenditPublicKey'];
-    $secretKey = $gatewayParams['xenditTestMode'] == 'on' ? $gatewayParams['xenditTestSecretKey'] : $gatewayParams['xenditSecretKey'];
+// Create/Update credit card
+if ($action == 'updatecc' || $action == "createcc") {
 
     // Retrieve data returned in redirect
-    $invoiceId = $_REQUEST['invoice_id'] ?? '';
-    $customerId = $_REQUEST['customer_id'] ?? '';
-    $amount = $_REQUEST['amount'] ?? 1;
-    $fees = $_REQUEST['fees'] ?? '';
-    $currencyCode = $_REQUEST['currency'] ?? '';
-    $transactionId = $_REQUEST['transaction_id'] ?? '';
-    $cardNumber = $_REQUEST['xendit_card_number'] ?? '';
-    $cardType = $_REQUEST['xendit_card_type'] ?? '';
-    $cardExpMonth = $_REQUEST['xendit_card_exp_month'] ?? '';
-    $cardExpYear = $_REQUEST['xendit_card_exp_year'] ?? '';
-    $cardToken = $_REQUEST['card_token'] ?? '';
+    $params = [
+        "publicKey" => $xenditRequest->getPublicKey(),
+        "secretKey" => $xenditRequest->getSecretKey(),
+        "gatewayModuleName" => $gatewayParams['paymentmethod'],
+        "customerId" => $_REQUEST['customer_id'] ?? '',
+        "cardLastFour" => $_REQUEST['xendit_card_number'] ? substr($_REQUEST['xendit_card_number'], -4, 4) : "",
+        "cardExpiryDate" => isset($_REQUEST['xendit_card_exp_month']) && isset($_REQUEST['xendit_card_exp_year'])
+            ? sprintf("%s%s", $_REQUEST['xendit_card_exp_month'], substr($_REQUEST['xendit_card_exp_year'], -2))
+            : "",
+        "cardType" => $_REQUEST['xendit_card_type'] ? (
+            CreditCard::CARD_LABEL[$_REQUEST['xendit_card_type']] ?? ""
+        ) : "",
+        "cardToken" => $_REQUEST['xendit_token'] ?? "",
+        "cardDescription" => $_REQUEST['card_description'] ?? "",
+        "paymentmethod" => $gatewayParams['paymentmethod'],
+        "invoiceId" => $_REQUEST['invoice_id'] ?? '',
+        "payMethodId" => $_REQUEST['custom_reference'] ?? ''
+    ];
+
     $verificationHash = $_REQUEST['verification_hash'] ?? '';
     $payMethodId = isset($_REQUEST['custom_reference']) ? (int)$_REQUEST['custom_reference'] : 0;
 
-    $comparisonHash = sha1(
-        implode('|', [
-            $publicKey,
-            $customerId,
-            $invoiceId,
-            $amount,
-            $currencyCode,
-            $secretKey
-        ])
-    );
-
-    if ($verificationHash !== $comparisonHash) {
+    // validate hash
+    if ($creditCard->compareHash($params, $verificationHash)) {
         logTransaction($gatewayParams['paymentmethod'], $_REQUEST, "Invalid Hash");
         die('Invalid hash.');
     }
 
-    if (!empty($cardToken)) {
+    // Save credit card if it has card Token
+    if (!empty($params["cardToken"])) {
         try {
-            // Function available in WHMCS 7.9 and later
-            updateCardPayMethod(
-                $customerId,
-                $payMethodId,
-                sprintf("%s%s", $cardExpMonth, substr($cardExpYear, -2)),
-                null, // card start date
-                null, // card issue number
-                $cardToken
-            );
-
-            // Update last 4 digits
-            CreditCard::where('pay_method_id', $payMethodId)->update([
-                'last_four' => substr($cardNumber, -4, 4),
-                'card_type' => CreditCard::CARD_LABEL[$cardType] ?? $cardType
-            ]);
-
-            // Log to gateway log as successful.
-            logTransaction($gatewayParams['paymentmethod'], $_REQUEST, 'Update Success');
+            $creditCard->saveCreditCardToken($params, $action == "createcc");
 
             // Show success message.
             echo json_encode(
@@ -97,13 +77,13 @@ if (isset($_REQUEST['action']) && $_REQUEST['action'] == 'updatecc') {
         }
     } else {
         // Log to gateway log as unsuccessful.
-        logTransaction($gatewayParams['paymentmethod'], $_REQUEST, 'Update Failed');
+        logTransaction($gatewayParams['paymentmethod'], $_REQUEST, 'Save credit card failed');
 
         // Show failure message.
         echo json_encode(
             [
                 'error' => true,
-                'message' => 'Update failed. Please try again.'
+                'message' => 'Save credit card failed. Please try again.'
             ]
         );
         exit;

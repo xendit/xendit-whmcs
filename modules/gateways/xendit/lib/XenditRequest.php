@@ -16,6 +16,33 @@ class XenditRequest
     }
 
     /**
+     * @return bool
+     */
+    public function isTestMode(): bool
+    {
+        $gatewayParams = $this->getModuleConfig();
+        return $gatewayParams['xenditTestMode'] == "on";
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPublicKey()
+    {
+        $gatewayParams = $this->getModuleConfig();
+        return $this->isTestMode() ? $gatewayParams['xenditTestPublicKey'] : $gatewayParams['xenditPublicKey'];
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getSecretKey()
+    {
+        $gatewayParams = $this->getModuleConfig();
+        return $this->isTestMode() ? $gatewayParams['xenditTestSecretKey'] : $gatewayParams['xenditSecretKey'];
+    }
+
+    /**
      * @param string $method
      * @param string $endpoint
      * @param array $param
@@ -50,16 +77,13 @@ class XenditRequest
      */
     protected function defaultHeader(string $version = ''): array
     {
-        $gatewayParams = $this->getModuleConfig();
         $default_header = array(
             'content-type: application/json',
             'x-plugin-name: WHMCS',
             'x-plugin-version: 1.0.1'
         );
         $default_header[] = "authorization-type: ApiKey";
-        $default_header[] = 'Authorization: Basic ' . base64_encode(
-                ($gatewayParams["xenditTestMode"] == "on" ? $gatewayParams["xenditTestSecretKey"] : $gatewayParams["xenditSecretKey"]) . ':'
-            );
+        $default_header[] = 'Authorization: Basic ' . base64_encode(sprintf("%s:", $this->getSecretKey()));
         if (!empty($version)) {
             $default_header[] = 'x-api-version: ' . $version;
         }

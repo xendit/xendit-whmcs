@@ -75,7 +75,7 @@ class Link extends ActionBase
      */
     protected function isRefererUrlFromCart(): bool
     {
-        if(isset($_SERVER["HTTP_REFERER"])){
+        if(isset($_SERVER["HTTP_REFERER"]) && ltrim($_SERVER["SCRIPT_NAME"], "/") == "viewinvoice.php"){
             $uri = parse_url($_SERVER['HTTP_REFERER']);
             if(ltrim($uri["path"], "/") == "cart.php"){
                 return true;
