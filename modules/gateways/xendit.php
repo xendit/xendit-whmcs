@@ -331,8 +331,15 @@ function xendit_refund($params)
 
     // perform API call to initiate refund and interpret result
     $xenditRequest = new \Xendit\Lib\XenditRequest();
-    $invoiceResponse = $xenditRequest->getInvoiceById($transactionIdToRefund);
-    $chargeId = $invoiceResponse['credit_card_charge_id'];
+    try{
+        $invoiceResponse = $xenditRequest->getInvoiceById($transactionIdToRefund);
+        $chargeId = $invoiceResponse['credit_card_charge_id'];
+    }catch (Exception $e){
+        if(str_contains($e->getMessage(), "INVOICE_NOT_FOUND_ERROR")){
+            // The invoice created via CLI & chargeID saved to transaction
+            $chargeId = $transactionIdToRefund;
+        }
+    }
 
     if(empty($chargeId)) {
         return array(
@@ -347,7 +354,14 @@ function xendit_refund($params)
         'amount'        => $refundAmount
     );
 
-    $refundResponse = $xenditRequest->createRefund($chargeId, $body);
+    try{
+        $refundResponse = $xenditRequest->createRefund($chargeId, $body);
+    }catch (Exception $e){
+        return array(
+            'status' => 'declined',
+            'rawdata' => $e->getMessage(),
+        );
+    }
 
     if ($refundResponse['status'] === 'FAILED') {
         return array(
