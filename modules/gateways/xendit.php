@@ -1,4 +1,7 @@
 <?php
+if (!defined("WHMCS")) {
+    die("This file cannot be accessed directly");
+}
 
 //autoload gateway functions
 require_once __DIR__ . '/../../includes/gatewayfunctions.php';
@@ -6,10 +9,6 @@ require_once __DIR__ . '/../../includes/gatewayfunctions.php';
 require __DIR__ . '/xendit/autoload.php';
 
 use WHMCS\Billing\Invoice;
-
-if (!defined("WHMCS")) {
-    die("This file cannot be accessed directly");
-}
 
 /**
  * @return array
@@ -24,20 +23,38 @@ function xendit_MetaData()
     );
 }
 
-function xendit_storeremote($params)
-{
-}
-
 /**
- * @return array
+ * Xendit config
+ *
+ * @return array|string[][]
  */
 function xendit_config()
 {
-    // Create new table
-    (new \Xendit\Lib\ActionBase())->createTable();
-
-    // Generate config
+    (new \Xendit\Lib\Migrate())->createTransactionTable();
     return (new \Xendit\Lib\ActionBase())->createConfig();
+}
+
+/**
+ * Xendit Deactivate module
+ *
+ * @return string[]
+ */
+function xendit_deactivate()
+{
+    try{
+        (new \Xendit\Lib\Migrate())->removeTransactionTable();
+        return [
+            // Supported values here include: success, error or info
+            'status' => 'success',
+            'description' => 'Drop Xendit data success.'
+        ];
+    }catch (\Exception $e){
+        return [
+            // Supported values here include: success, error or info
+            "status" => "error",
+            "description" => "Unable drop Xendit data: {$e->getMessage()}",
+        ];
+    }
 }
 
 /**
@@ -64,7 +81,7 @@ function xendit_link($params)
  *
  * Called when a payment is requested to be processed and captured.
  *
- * The CVV number parameter will only be present for card holder present
+ * The CVV number parameter will only be present for cardholder present
  * transactions and when made against an existing stored payment token
  * where new card data has not been entered.
  *

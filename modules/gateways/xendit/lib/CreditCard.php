@@ -58,10 +58,10 @@ class CreditCard extends \Xendit\Lib\ActionBase
 
         return [
             "amount" => $params["amount"],
-            "currency" => "IDR",//$params["currency"],
+            "currency" => $params["currency"],
             "token_id" => $params["gatewayid"],
             "external_id" => $this->generateExternalId($params["invoiceid"]),
-            "store_name" => "WHMCS Testing",
+            "store_name" => $params["companyname"],
             "items" => $this->extractItems($invoice),
             "customer" => $this->extractCustomerDetail($params),
             "is_recurring" => true,
