@@ -1,4 +1,7 @@
 <?php
+if (!defined("WHMCS")) {
+    die("This file cannot be accessed directly");
+}
 
 //autoload gateway functions
 require_once __DIR__ . '/../../includes/gatewayfunctions.php';
@@ -9,10 +12,6 @@ use WHMCS\Billing\Invoice;
 use Xendit\Lib\Model\XenditTransaction;
 use Xendit\Lib\Recurring;
 use Xendit\Lib\XenditRequest;
-
-if (!defined("WHMCS")) {
-    die("This file cannot be accessed directly");
-}
 
 /**
  * @return array
@@ -28,15 +27,37 @@ function xendit_MetaData()
 }
 
 /**
- * @return array
+ * Xendit config
+ *
+ * @return array|string[][]
  */
 function xendit_config()
 {
-    // Create new table
-    (new \Xendit\Lib\ActionBase())->createTable();
-
-    // Generate config
+    (new \Xendit\Lib\Migrate())->createTransactionTable();
     return (new \Xendit\Lib\ActionBase())->createConfig();
+}
+
+/**
+ * Xendit Deactivate module
+ *
+ * @return string[]
+ */
+function xendit_deactivate()
+{
+    try{
+        (new \Xendit\Lib\Migrate())->removeTransactionTable();
+        return [
+            // Supported values here include: success, error or info
+            'status' => 'success',
+            'description' => 'Drop Xendit data success.'
+        ];
+    }catch (\Exception $e){
+        return [
+            // Supported values here include: success, error or info
+            "status" => "error",
+            "description" => "Unable drop Xendit data: {$e->getMessage()}",
+        ];
+    }
 }
 
 /**
@@ -63,7 +84,7 @@ function xendit_link($params)
  *
  * Called when a payment is requested to be processed and captured.
  *
- * The CVV number parameter will only be present for card holder present
+ * The CVV number parameter will only be present for cardholder present
  * transactions and when made against an existing stored payment token
  * where new card data has not been entered.
  *
@@ -286,4 +307,63 @@ HTML;
  */
 function xendit_adminstatusmsg($params)
 {
+}
+
+/**
+ * Refund transaction.
+ *
+ * Called when a refund is requested for a previously successful transaction.
+ *
+ * @param array $params Payment Gateway Module Parameters
+ *
+ * @see https://developers.whmcs.com/payment-gateways/refunds/
+ *
+ * @return array Transaction response status
+ */
+function xendit_refund($params)
+{
+    // Transaction Parameters
+    $transactionIdToRefund = $params['transid'];
+    $refundAmount = $params['amount'];
+
+    // System Parameters
+    $companyName = $params['companyname'];
+
+    // perform API call to initiate refund and interpret result
+    $xenditRequest = new \Xendit\Lib\XenditRequest();
+    $invoiceResponse = $xenditRequest->getInvoiceById($transactionIdToRefund);
+    $chargeId = $invoiceResponse['credit_card_charge_id'];
+
+    if(empty($chargeId)) {
+        return array(
+            'status'    => 'error',
+            'rawdata'   => 'Can not refund the payment because because it is not credit card transaction'
+        );
+    }
+
+    $body = array(
+        'store_name'    => $companyName,
+        'external_id'   => 'whmcs-refund-' . uniqid(),
+        'amount'        => $refundAmount
+    );
+
+    $refundResponse = $xenditRequest->createRefund($chargeId, $body);
+
+    if ($refundResponse['status'] === 'FAILED') {
+        return array(
+            'status' => 'declined',
+            'rawdata' => $refundResponse,
+            // Unique Transaction ID for the refund transaction
+            'transid' => $refundResponse['id'],
+        );
+    }
+
+    return array(
+        // 'success' if successful, otherwise 'declined', 'error' for failure
+        'status' => 'success',
+        // Data to be recorded in the gateway log - can be a string or array
+        'rawdata' => $refundResponse,
+        // Unique Transaction ID for the refund transaction
+        'transid' => $refundResponse['id'],
+    );
 }

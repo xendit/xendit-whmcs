@@ -19,11 +19,12 @@ jQuery(function ($) {
             if ($('#btnSaveCC').length) {
                 this.btnSaveCC = $('#btnSaveCC');
             }
-
+            if ($('#btnCancel').length) {
+                this.btnCancel = $('#btnCancel');
+            }
             if ($('.validation').length) {
                 this.validation = $('.validation');
             }
-
             if ($('#inputCardNumber').length) {
                 this.inputCardNumber = $('#inputCardNumber');
                 this.inputCardNumber.payment('formatCardNumber');
@@ -40,6 +41,9 @@ jQuery(function ($) {
             // Save cc
             this.btnSaveCC.on('click', this.onSubmit);
             this.form.on('submit', this.onSubmit);
+
+            // Back to payment methods
+            this.btnCancel.on('click', this.backToPaymentMethod);
 
             $(document)
                 .on(
@@ -125,6 +129,7 @@ jQuery(function ($) {
         onSubmit: function (e) {
             e.preventDefault();
             if (cc_xendit_form.hasToken() || cc_xendit_form.hasError()) {
+                cc_xendit_form.form.find(".message").remove();
                 $.ajax({
                     url: $('input[name=return_url]').val(),
                     method: 'POST',
@@ -132,9 +137,9 @@ jQuery(function ($) {
                     dataType: 'json',
                     success: function (response) {
                         if (!response.error) {
-                            cc_xendit_form.form.append('<p class="text-success">Updated successful.</p>')
+                            cc_xendit_form.form.append('<p class="message text-success">Updated successful.</p>')
                         } else {
-                            cc_xendit_form.form.append('<p class="text-danger">' + response.message + '</p>')
+                            cc_xendit_form.form.append('<p class="message text-danger">' + response.message + '</p>')
                         }
 
                         cc_xendit_form.unBlock();
@@ -150,7 +155,7 @@ jQuery(function ($) {
                 // check if all card details are not empty
                 if (!card || !cvn || !expiry) {
                     var err = {
-                        message: 'missing card information'
+                        message: 'Missing card information'
                     }
                     return cc_xendit_form.handleError(err);
                 }
@@ -158,7 +163,7 @@ jQuery(function ($) {
                 // allow 15 digits for AMEX & 16 digits for others
                 if (card.length != 16 && card.length != 15) {
                     var err = {
-                        message: 'incorrect number'
+                        message: 'Incorrect number'
                     }
                     return cc_xendit_form.handleError(err);
                 }
@@ -166,7 +171,7 @@ jQuery(function ($) {
                 // validate card number
                 if (!Xendit.card.validateCardNumber(card)) {
                     var err = {
-                        message: 'incorrect number'
+                        message: 'Incorrect number'
                     }
                     return cc_xendit_form.handleError(err);
                 }
@@ -174,7 +179,7 @@ jQuery(function ($) {
                 // validate expiry format MM/YY
                 if (expiry.length != 5) {
                     var err = {
-                        message: 'invalid expire'
+                        message: 'Invalid expire'
                     }
                     return cc_xendit_form.handleError(err);
                 }
@@ -182,7 +187,7 @@ jQuery(function ($) {
                 // validate cvc
                 if (cvn.length < 3) {
                     var err = {
-                        message: 'invalid cvn'
+                        message: 'Invalid cvn'
                     }
                     return cc_xendit_form.handleError(err);
                 }
@@ -193,7 +198,7 @@ jQuery(function ($) {
                     "card_exp_year": cc_xendit_form.extractYear(expiry),
                     "card_cvn": cvn,
                     "is_multiple_use": true,
-                    "on_behalf_of": false,
+                    "on_behalf_of": "",
                     "currency": xenditParam.currency
                 };
                 var card_type = cc_xendit_form.getCardType();
@@ -256,6 +261,7 @@ jQuery(function ($) {
                 return false;
             }
             var token_id = response.id;
+
             cc_xendit_form.form.append("<input type='hidden' class='xendit_cc_hidden_input' name='xendit_token' value='" + token_id + "'/>");
             cc_xendit_form.form.submit();
 
@@ -277,6 +283,10 @@ jQuery(function ($) {
 
             return 'unknown';
         },
+
+        backToPaymentMethod: function (e){
+            parent.location.href = cc_xendit_form.btnCancel.data("href");
+        }
     };
 
     cc_xendit_form.init();

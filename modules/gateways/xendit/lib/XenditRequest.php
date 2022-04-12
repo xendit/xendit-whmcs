@@ -4,8 +4,7 @@ namespace Xendit\Lib;
 
 class XenditRequest
 {
-    protected $tpi_server_domain = "https://tpi.xendit.co";
-    protected $for_user_id;
+    protected $tpi_server_domain  = "https://tpi.xendit.co";
 
     /**
      * @return mixed
@@ -82,13 +81,9 @@ class XenditRequest
             'x-plugin-name: WHMCS',
             'x-plugin-version: 1.0.1'
         );
-        $default_header[] = "authorization-type: ApiKey";
-        $default_header[] = 'Authorization: Basic ' . base64_encode(sprintf("%s:", $this->getSecretKey()));
+        $default_header[] = 'Authorization: Basic '.base64_encode(sprintf("%s:", $this->getSecretKey()));
         if (!empty($version)) {
             $default_header[] = 'x-api-version: ' . $version;
-        }
-        if ($this->for_user_id) {
-            $default_header[] = 'for-user-id: ' . $this->for_user_id;
         }
 
         return $default_header;
@@ -123,6 +118,27 @@ class XenditRequest
             ]);
             return $this->processResponse($response);
         } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
+    }
+
+    /**
+     * @param string $chargeId
+     * @param array $payload
+     * @return object json
+     * @throws \Exception
+     */
+    public function createRefund(string $chargeId, array $payload = [])
+    {
+        try{
+            $response = $this->request(
+                "POST",
+                '/payment/xendit/credit-card/charges/' . $chargeId . '/refund', [
+                'headers' => $this->defaultHeader(),
+                'body' => json_encode($payload)
+            ]);
+            return $this->processResponse($response);
+        }catch (\Exception $e){
             throw new \Exception($e->getMessage());
         }
     }

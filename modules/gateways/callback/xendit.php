@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../../includes/invoicefunctions.php';
 require_once __DIR__ . '/../xendit/autoload.php';
 
 use Xendit\Lib\Callback;
-use \Xendit\lib\CreditCard;
+use Xendit\lib\CreditCard;
 use Xendit\Lib\XenditRequest;
 
 $callback = new Callback();
@@ -38,7 +38,6 @@ if ($action == 'updatecc' || $action == "createcc") {
         "invoiceId" => $_REQUEST['invoice_id'] ?? '',
         "payMethodId" => $_REQUEST['custom_reference'] ?? ''
     ];
-
     $verificationHash = $_REQUEST['verification_hash'] ?? '';
     $payMethodId = isset($_REQUEST['custom_reference']) ? (int)$_REQUEST['custom_reference'] : 0;
 
@@ -89,25 +88,29 @@ if ($action == 'updatecc' || $action == "createcc") {
         exit;
     }
 } else {
-
     // use for callback
-    $rawRequestInput = file_get_contents("php://input");
-    $arrRequestInput = json_decode($rawRequestInput, true);
+    $arrRequestInput = json_decode(file_get_contents("php://input"), true);
+    if (
+        !empty($arrRequestInput)
+        && isset($arrRequestInput['external_id'])
+        && !empty($arrRequestInput['external_id'])
+    ) {
+        $invoiceId = $callback->getInvoiceIdFromExternalId($arrRequestInput['external_id']);
+        $transactions = $callback->getTransactionFromInvoiceId($invoiceId);
 
-    $externalId = explode("-", $arrRequestInput['external_id']);
-    $invoiceId = trim(end($externalId));
-    $transactions = $callback->getTransactionFromInvoiceId($invoiceId);
-
-    try {
-        $result = $callback->confirmInvoice(
-            $invoiceId,
-            $arrRequestInput,
-            $arrRequestInput["status"] == "PAID"
-        );
-        if ($result) {
-            $callback->updateTransactions($transactions);
+        try {
+            $result = $callback->confirmInvoice(
+                $invoiceId,
+                $arrRequestInput,
+                $arrRequestInput["status"] == "PAID"
+            );
+            if ($result) {
+                $callback->updateTransactions($transactions);
+                echo 'Success';
+                exit;
+            }
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
         }
-    } catch (\Exception $e) {
-        throw new \Exception($e->getMessage());
     }
 }
