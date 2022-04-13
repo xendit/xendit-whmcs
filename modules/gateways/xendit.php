@@ -107,17 +107,6 @@ function xendit_capture($params)
         ];
     }
 
-    $xenditRecurring = new Recurring();
-    $invoice = $xenditRecurring->getInvoice($params["invoiceid"]);
-    if ($invoice && !$xenditRecurring->isInvoiceUsedCreditCard($params["invoiceid"])) {
-        $invoice->setAttribute("paymethodid", NULL)->save();
-        return [
-            'status' => 'declined',
-            'declinereason' => 'This invoice does not charge via CC'
-        ];
-    }
-
-
     // Generate payload
     $cc = new \Xendit\Lib\CreditCard();
     $payload = $cc->generateCCPaymentRequest($params);
@@ -192,11 +181,59 @@ function xendit_capture($params)
  */
 function xendit_remoteinput($params)
 {
-    return <<<HTML
-<div class="alert alert-info text-center">
-    Adding new card is not possible on WHMCS directly.
-</div>
-HTML;
+    // Gateway Configuration Parameters
+    $publicKey = $params['xenditTestMode'] == 'on' ? $params['xenditTestPublicKey'] : $params['xenditPublicKey'];
+    $secretKey = $params['xenditTestMode'] == 'on' ? $params['xenditTestSecretKey'] : $params['xenditSecretKey'];
+
+    // Client Parameters
+    $clientId = $params["clientdetails"]["id"];
+
+    // System Parameters
+    $systemUrl = $params['systemurl'];
+    $currencyData = getCurrency($clientId);
+
+    // Build a form which can be submitted to an iframe target to render
+    // the payment form.
+    $formAction = $systemUrl . 'modules/gateways/xendit/handler/updatecc.php';
+    $formFields = [
+        'public_key' => $publicKey,
+        'secret_key' => $secretKey,
+        'card_token' => "",
+        'card_number' => "",
+        'card_expiry_date' => "",
+        'action' => 'createcc',
+        'invoice_id' => 0,
+        'amount' => 1,
+        'currency' => $currencyData["code"],
+        'customer_id' => $clientId,
+        'return_url' => $systemUrl . 'modules/gateways/callback/xendit.php',
+        'payment_method_url' => $systemUrl . 'index.php?rp=/account/paymentmethods',
+        'verification_hash' => sha1(
+            implode('|', [
+                $publicKey,
+                $clientId,
+                0, // Invoice ID - there is no invoice for an update
+                1, // Amount - there is no amount when updating
+                $currencyData["code"], // Currency Code - there is no currency when updating
+                $secretKey
+            ])
+        ),
+    ];
+
+    $formOutput = '';
+    foreach ($formFields as $key => $value) {
+        $formOutput .= '<input type="hidden" name="' . $key . '" value="' . $value . '">' . PHP_EOL;
+    }
+
+    // This is a working example which posts to the file: demo/remote-iframe-demo.php
+    return '<div id="frmRemoteCardProcess" class="text-center">
+    <form method="post" action="' . $formAction . '" target="remoteUpdateIFrame">
+        ' . $formOutput . '
+        <noscript>
+            <input type="submit" value="Click here to continue &raquo;">
+        </noscript>
+    </form>
+</div>';
 }
 
 /**

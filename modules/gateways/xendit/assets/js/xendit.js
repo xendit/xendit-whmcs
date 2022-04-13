@@ -51,10 +51,6 @@ jQuery(function ($) {
                     '#newCardInfo :input',
                     this.onCCFormChange
                 )
-                .on(
-                    'checkout_error',
-                    this.clearToken
-                )
                 .ready(function () {
                     $('body').append('<div class="overlay" style="display: none;"></div>' +
                         '<div id="three-ds-container" style="display: none;">' +
@@ -78,8 +74,8 @@ jQuery(function ($) {
                 });
         },
 
-        isXenditChosen: function () {
-            return $('input[name=paymentmethod]:checked').val() == "xendit" && 'new' === $('input#new:checked').val();
+        isAddNewCC: function () {
+            return $('input[name=action]').val() == "createcc";
         },
 
         hasToken: function () {
@@ -91,11 +87,15 @@ jQuery(function ($) {
         },
 
         block: function () {
+            if(cc_xendit_form.btnSaveCC.find('.loading-icon').length == 0){
+                cc_xendit_form.btnSaveCC.append('<div class="loading-icon spinner-border spinner-border-sm" role="status"></div>');
+            }
             cc_xendit_form.btnSaveCC.prop('disabled', true);
         },
 
         unBlock: function () {
             cc_xendit_form.btnSaveCC.prop('disabled', false);
+            cc_xendit_form.btnSaveCC.find('.loading-icon').remove();
         },
 
         handleError: function (err) {
@@ -107,6 +107,7 @@ jQuery(function ($) {
             }
             cc_xendit_form.validation.html(failure_reason);
             cc_xendit_form.form.append("<input type='hidden' class='xendit_cc_hidden_input' name='xendit_failure_reason' value='" + failure_reason + "'/>");
+            cc_xendit_form.unBlock();
             return true;
         },
 
@@ -129,6 +130,7 @@ jQuery(function ($) {
         onSubmit: function (e) {
             e.preventDefault();
             if (cc_xendit_form.hasToken() || cc_xendit_form.hasError()) {
+                cc_xendit_form.block();
                 cc_xendit_form.form.find(".message").remove();
                 $.ajax({
                     url: $('input[name=return_url]').val(),
@@ -137,12 +139,14 @@ jQuery(function ($) {
                     dataType: 'json',
                     success: function (response) {
                         if (!response.error) {
-                            cc_xendit_form.form.append('<p class="message text-success">Updated successful.</p>')
+                            var message = cc_xendit_form.isAddNewCC() ? "Payment method added successfully" : "Payment method updated successfully"
+                            cc_xendit_form.form.append('<p class="message text-success">'+message+'</p>')
                         } else {
                             cc_xendit_form.form.append('<p class="message text-danger">' + response.message + '</p>')
                         }
 
                         cc_xendit_form.unBlock();
+                        cc_xendit_form.backToPaymentMethod();
                     }
                 });
             } else {

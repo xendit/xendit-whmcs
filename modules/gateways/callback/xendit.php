@@ -18,7 +18,6 @@ $action = $_REQUEST['action'] ?? "";
 
 // Create/Update credit card
 if ($action == 'updatecc' || $action == "createcc") {
-
     // Retrieve data returned in redirect
     $params = [
         "publicKey" => $xenditRequest->getPublicKey(),
@@ -82,7 +81,7 @@ if ($action == 'updatecc' || $action == "createcc") {
         echo json_encode(
             [
                 'error' => true,
-                'message' => 'Save credit card failed. Please try again.'
+                'message' => $action == "createcc" ? "Payment method failed to create successfully. Please try again." : "Payment method failed to save changes. Please try again."
             ]
         );
         exit;
@@ -104,7 +103,7 @@ if ($action == 'updatecc' || $action == "createcc") {
             $result = $callback->confirmInvoice(
                 $invoiceId,
                 $xenditInvoice,
-                $xenditInvoice["status"] == "PAID"
+                $xenditInvoice["status"] == "PAID" || $xenditInvoice["status"] == "SETTLED"
             );
             if ($result) {
                 $callback->updateTransactions($transactions);

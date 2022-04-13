@@ -152,9 +152,7 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
      */
     public function getTransactionFromInvoiceId(int $invoiceId)
     {
-        return XenditTransaction::where("invoiceid", $invoiceId)
-            ->whereNotIn("status", ["EXPIRED"])
-            ->get();
+        return XenditTransaction::where("invoiceid", $invoiceId)->get();
     }
 
     /**
