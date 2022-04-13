@@ -99,10 +99,12 @@ if ($action == 'updatecc' || $action == "createcc") {
         $transactions = $callback->getTransactionFromInvoiceId($invoiceId);
 
         try {
+            // Get invoice from Xendit
+            $xenditInvoice = $xenditRequest->getInvoiceById($arrRequestInput['id']);
             $result = $callback->confirmInvoice(
                 $invoiceId,
-                $arrRequestInput,
-                $arrRequestInput["status"] == "PAID"
+                $xenditInvoice,
+                $xenditInvoice["status"] == "PAID"
             );
             if ($result) {
                 $callback->updateTransactions($transactions);
