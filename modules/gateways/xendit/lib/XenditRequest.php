@@ -230,36 +230,4 @@ class XenditRequest
             throw new \Exception($e->getMessage());
         }
     }
-
-    /**
-     * @return false|string
-     * @throws \Exception
-     */
-    public function getCCSettings()
-    {
-        try {
-            $response = $this->request("GET", '/payment/xendit/settings/credit-card', [
-                'headers' => $this->defaultHeader()
-            ]);
-            return $this->processResponse($response);
-        } catch (\Exception $e) {
-            throw new \Exception($e->getMessage());
-        }
-    }
-
-    /**
-     * @return false|string
-     * @throws \Exception
-     */
-    public function getMIDSettings()
-    {
-        try {
-            $response = $this->request("GET", '/payment/xendit/settings/mid', [
-                'headers' => $this->defaultHeader()
-            ]);
-            return $this->processResponse($response);
-        } catch (\Exception $e) {
-            throw new \Exception($e->getMessage());
-        }
-    }
 }
