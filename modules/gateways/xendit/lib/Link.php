@@ -149,6 +149,7 @@ class Link extends ActionBase
 
             // If force create new invoice
             if ($force) {
+
                 $payload = $this->generateInvoicePayload($params, true);
                 $createInvoice = $this->xenditRequest->createInvoice($payload);
                 $url = $createInvoice['invoice_url'];
