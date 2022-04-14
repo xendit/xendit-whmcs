@@ -100,6 +100,9 @@ if ($action == 'updatecc' || $action == "createcc") {
         try {
             // Get invoice from Xendit
             $xenditInvoice = $xenditRequest->getInvoiceById($arrRequestInput['id']);
+            if(isset($arrRequestInput['credit_card_token'])){
+                $xenditInvoice['credit_card_token'] = $arrRequestInput['credit_card_token'];
+            }
             $result = $callback->confirmInvoice(
                 $invoiceId,
                 $xenditInvoice,
