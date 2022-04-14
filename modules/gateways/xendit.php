@@ -9,6 +9,9 @@ require_once __DIR__ . '/../../includes/gatewayfunctions.php';
 require __DIR__ . '/xendit/autoload.php';
 
 use WHMCS\Billing\Invoice;
+use Xendit\Lib\Model\XenditTransaction;
+use Xendit\Lib\Recurring;
+use Xendit\Lib\XenditRequest;
 
 /**
  * @return array
@@ -18,7 +21,7 @@ function xendit_MetaData()
     return array(
         'DisplayName' => 'Xendit Payment Gateway',
         'APIVersion' => '1.1',
-        'DisableLocalCreditCardInput' => true,
+        'DisableLocalCreditCardInput' => false,
         'TokenisedStorage' => false
     );
 }
@@ -91,8 +94,10 @@ function xendit_link($params)
  */
 function xendit_capture($params)
 {
+    $xenditRequest = new XenditRequest();
+
     // Capture Parameters
-    $remoteGatewayToken = $params['gatewayid'];
+    $remoteGatewayToken = $params["gatewayid"];
 
     // A token is required for a remote input gateway capture attempt
     if (!$remoteGatewayToken) {
@@ -102,12 +107,22 @@ function xendit_capture($params)
         ];
     }
 
+    $xenditRecurring = new Recurring();
+    $invoice = $xenditRecurring->getInvoice($params["invoiceid"]);
+    if ($invoice && !$xenditRecurring->isInvoiceUsedCreditCard($params["invoiceid"])) {
+        $invoice->setAttribute("paymethodid", NULL)->save();
+        return [
+            'status' => 'declined',
+            'declinereason' => 'This invoice does not charge via CC'
+        ];
+    }
+
+
     // Generate payload
     $cc = new \Xendit\Lib\CreditCard();
     $payload = $cc->generateCCPaymentRequest($params);
 
     try {
-        $xenditRequest = new \Xendit\Lib\XenditRequest();
         $response = $xenditRequest->createCharge($payload);
     } catch (\Exception $e) {
         return [
@@ -123,14 +138,16 @@ function xendit_capture($params)
     if (!empty($response) && isset($response['status']) && $response['status'] == "CAPTURED") {
 
         // Save transaction status
-        $xenditRecurring = new \Xendit\Lib\Recurring();
+        $xenditRecurring = new Recurring();
         $transactions = $xenditRecurring->getTransactionFromInvoiceId($params["invoiceid"]);
         if (!empty($transactions)) {
-            foreach ($transactions as $transaction) {
-                $transaction->setAttribute("status", "PAID");
-                $transaction->setAttribute("payment_method", "CREDIT_CARD");
-                $transaction->save();
-            }
+            $xenditRecurring->updateTransactions(
+                $transactions,
+                [
+                    "status" => XenditTransaction::STATUS_PAID,
+                    "payment_method" => "CREDIT_CARD"
+                ]
+            );
         }
 
         return [
@@ -169,13 +186,17 @@ function xendit_capture($params)
  *
  * @param array $params Payment Gateway Module Parameters
  *
- * @return array
+ * @return string
  * @see https://developers.whmcs.com/payment-gateways/remote-input-gateway/
  *
  */
 function xendit_remoteinput($params)
 {
-
+    return <<<HTML
+<div class="alert alert-info text-center">
+    Adding new card is not possible on WHMCS directly.
+</div>
+HTML;
 }
 
 /**
@@ -207,15 +228,18 @@ function xendit_remoteupdate($params)
 HTML;
     }
 
+    $xenditRequest = new XenditRequest();
+
     // Gateway Configuration Parameters
-    $publicKey = $params['xenditTestMode'] == 'on' ? $params['xenditTestPublicKey'] : $params['xenditPublicKey'];
-    $secretKey = $params['xenditTestMode'] == 'on' ? $params['xenditTestSecretKey'] : $params['xenditSecretKey'];
+    $publicKey = $xenditRequest->getPublicKey();
+    $secretKey = $xenditRequest->getSecretKey();
     $remoteStorageToken = $params['gatewayid'];
 
     // Client Parameters
     $clientId = $params['client_id'];
     $payMethodId = $params['paymethodid'];
     $card_expired_date = (new DateTime($params['payMethod']->payment->expiry_date));
+    $currencyData = getCurrency($clientId);
 
     // System Parameters
     $systemUrl = $params['systemurl'];
@@ -227,21 +251,23 @@ HTML;
         'public_key' => $publicKey,
         'secret_key' => $secretKey,
         'card_token' => $remoteStorageToken,
+        'card_description' => $params['payMethod']->description,
         'card_number' => sprintf("**** **** **** %s", $params['payMethod']->payment->last_four),
         'card_expiry_date' => sprintf("%s / %s", $card_expired_date->format("m"), substr($card_expired_date->format("Y"), -2)),
         'action' => 'updatecc',
         'invoice_id' => 0,
         'amount' => 1,
-        'currency' => 'IDR',
+        'currency' => $currencyData['code'],
         'customer_id' => $clientId,
         'return_url' => $systemUrl . 'modules/gateways/callback/xendit.php',
+        'payment_method_url' => $systemUrl . 'index.php?rp=/account/paymentmethods',
         'verification_hash' => sha1(
             implode('|', [
                 $publicKey,
                 $clientId,
                 0, // Invoice ID - there is no invoice for an update
                 1, // Amount - there is no amount when updating
-                'IDR', // Currency Code - there is no currency when updating
+                $currencyData["code"], // Currency Code - there is no currency when updating
                 $secretKey
             ])
         ),
@@ -305,8 +331,15 @@ function xendit_refund($params)
 
     // perform API call to initiate refund and interpret result
     $xenditRequest = new \Xendit\Lib\XenditRequest();
-    $invoiceResponse = $xenditRequest->getInvoiceById($transactionIdToRefund);
-    $chargeId = $invoiceResponse['credit_card_charge_id'];
+    try{
+        $invoiceResponse = $xenditRequest->getInvoiceById($transactionIdToRefund);
+        $chargeId = $invoiceResponse['credit_card_charge_id'];
+    }catch (Exception $e){
+        if(str_contains($e->getMessage(), "INVOICE_NOT_FOUND_ERROR")){
+            // The invoice created via CLI & chargeID saved to transaction
+            $chargeId = $transactionIdToRefund;
+        }
+    }
 
     if(empty($chargeId)) {
         return array(
@@ -321,7 +354,14 @@ function xendit_refund($params)
         'amount'        => $refundAmount
     );
 
-    $refundResponse = $xenditRequest->createRefund($chargeId, $body);
+    try{
+        $refundResponse = $xenditRequest->createRefund($chargeId, $body);
+    }catch (Exception $e){
+        return array(
+            'status' => 'declined',
+            'rawdata' => $e->getMessage(),
+        );
+    }
 
     if ($refundResponse['status'] === 'FAILED') {
         return array(

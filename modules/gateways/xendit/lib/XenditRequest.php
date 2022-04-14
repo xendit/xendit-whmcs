@@ -1,4 +1,5 @@
 <?php
+
 namespace Xendit\Lib;
 
 class XenditRequest
@@ -11,6 +12,33 @@ class XenditRequest
     protected function getModuleConfig()
     {
         return getGatewayVariables('xendit');
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTestMode(): bool
+    {
+        $gatewayParams = $this->getModuleConfig();
+        return $gatewayParams['xenditTestMode'] == "on";
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPublicKey()
+    {
+        $gatewayParams = $this->getModuleConfig();
+        return $this->isTestMode() ? $gatewayParams['xenditTestPublicKey'] : $gatewayParams['xenditPublicKey'];
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getSecretKey()
+    {
+        $gatewayParams = $this->getModuleConfig();
+        return $this->isTestMode() ? $gatewayParams['xenditTestSecretKey'] : $gatewayParams['xenditSecretKey'];
     }
 
     /**
@@ -48,15 +76,12 @@ class XenditRequest
      */
     protected function defaultHeader(string $version = ''): array
     {
-        $gatewayParams = $this->getModuleConfig();
         $default_header = array(
             'content-type: application/json',
             'x-plugin-name: WHMCS',
             'x-plugin-version: 1.0.1'
         );
-        $default_header[] = 'Authorization: Basic '.base64_encode(
-                ($gatewayParams["xenditTestMode"] == "on" ? $gatewayParams["xenditTestSecretKey"] : $gatewayParams["xenditSecretKey"]).':'
-            );
+        $default_header[] = 'Authorization: Basic '.base64_encode(sprintf("%s:", $this->getSecretKey()));
         if (!empty($version)) {
             $default_header[] = 'x-api-version: ' . $version;
         }
@@ -72,7 +97,7 @@ class XenditRequest
     protected function processResponse(string $body)
     {
         $response = json_decode($body, true);
-        if(isset($response["error_code"]) && !empty($response["error_code"])){
+        if (isset($response["error_code"]) && !empty($response["error_code"])) {
             throw new \Exception(sprintf("Error: %s - Code %s", $response["message"], $response["error_code"]));
         }
         return $response;
@@ -85,14 +110,14 @@ class XenditRequest
      */
     public function getInvoiceById(string $invoice_id)
     {
-        try{
+        try {
             $response = $this->request(
                 "GET",
                 '/payment/xendit/invoice/' . $invoice_id, [
                 'headers' => $this->defaultHeader()
             ]);
             return $this->processResponse($response);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
     }
@@ -125,13 +150,13 @@ class XenditRequest
      */
     public function createInvoice(array $param = [])
     {
-        try{
+        try {
             $response = $this->request("POST", '/payment/xendit/invoice', [
                 'headers' => $this->defaultHeader(),
                 'body' => json_encode($param)
             ]);
             return $this->processResponse($response);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
     }

@@ -97,9 +97,22 @@ if ($action === 'payment') {
 
     <div id="newCardInfo">
         <div class="form-group">
+            <label>Description</label>
+            <div class="input-group">
+                <input type="text" name="card_description" id="inputCardDescription" class="form-control" placeholder="Card description"
+                       value="<?=$_POST['card_description'] ?? ''?>"
+                >
+                <div class="input-group-append">
+                                    <span class="input-group-text text-muted">
+                                        (Optional)
+                                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
             <label>Card Number</label>
-            <input type="tel" name="card_number" id="inputCardNumber" class="form-control" required placeholder="•••• •••• •••• ••••"
-                   data-supported-cards="visa,mastercard"
+            <input type="tel" name="card_number" id="inputCardNumber" class="form-control" required placeholder="1234 1234 1234 1234"
+                   data-supported-cards="visa,mastercard,amex,jcb"
                    value="<?=$_POST['card_number'] ?? ''?>"
             >
         </div>
@@ -107,18 +120,19 @@ if ($action === 'payment') {
             <div class="form-group col-md-6 col-sm-6">
                 <label>Expiry Date</label>
                 <input type="text" name="card_expired" id="inputCardExpiry" class="form-control" required
-                       placeholder="•• / ••"
+                       placeholder="MM / YY"
                        value="<?=$_POST['card_expiry_date'] ?? ''?>"
                 >
             </div>
             <div class="form-group col-md-6 col-sm-6">
                 <label>CVV Number</label>
-                <input type="password" name="card_cvv" id="inputCardCVV" class="form-control" required placeholder="•••" >
+                <input type="password" name="card_cvv" id="inputCardCVV" class="form-control" required placeholder="CVN" >
             </div>
         </div>
     </div>
     <p class="validation"></p>
-    <button type="submit" id="btnSaveCC" class="btn btn-primary">Submit</button>
+    <button type="submit" id="btnSaveCC" class="btn btn-primary">Save Changes</button>
+    <button type="button" data-href="<?=$_POST['payment_method_url'] ?? ''?>" id="btnCancel" class="btn btn-secondary">Cancel</button>
 </form>
 
 <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
@@ -130,6 +144,5 @@ if ($action === 'payment') {
 <script type="text/javascript" src="https://js.xendit.co/v1/xendit.min.js"></script>
 <script src="/assets/js/jquery.payment.js"></script>
 <script src="../assets/js/xendit.js"></script>
-
 </body>
 </html>

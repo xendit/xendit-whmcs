@@ -55,6 +55,7 @@ class Recurring extends \Xendit\Lib\ActionBase
 
         $orderIds = [];
         $items = [];
+
         foreach ($invoice->items()->get() as $item){
             $items[$item->relid] = $item->type;
 
@@ -106,11 +107,12 @@ class Recurring extends \Xendit\Lib\ActionBase
         if(empty($invoice))
             throw \Exception("Invoice does not exists!");
 
+        $transactions = [];
         foreach ($invoice->items()->get() as $item){
 
             // Custom item
             if($item->type == ""){
-                $this->storeTransaction(
+                $transactions[] = $this->storeTransaction(
                     [
                         "invoiceid" => $invoiceid,
                         "type" => $item->type,
@@ -121,7 +123,7 @@ class Recurring extends \Xendit\Lib\ActionBase
                 // Products
                 foreach (self::WHMCS_PRODUCTS as $product){
                     foreach ($item->$product()->get() as $p){
-                        $this->storeTransaction(
+                        $transactions[] = $this->storeTransaction(
                             [
                                 "invoiceid" => $invoiceid,
                                 "orderid" => $p->orderid,
@@ -134,6 +136,7 @@ class Recurring extends \Xendit\Lib\ActionBase
                 }
             }
         }
+        return $transactions;
     }
 
     /**
@@ -143,10 +146,5 @@ class Recurring extends \Xendit\Lib\ActionBase
     public function capture(int $invoiceId)
     {
         return localAPI("CapturePayment", ["invoiceid" => $invoiceId]);
-    }
-
-    public function setTransactionStatus()
-    {
-
     }
 }

@@ -4,6 +4,11 @@ namespace Xendit\lib;
 
 class CreditCard extends \Xendit\Lib\ActionBase
 {
+    const CARD_LABEL = [
+        'visa'          => 'Visa',
+        'mastercard'    => 'MasterCard'
+    ];
+
     /**
      * @param array $params
      * @return array[]
@@ -35,11 +40,11 @@ class CreditCard extends \Xendit\Lib\ActionBase
     public function extractItems($invoice): array
     {
         $items = array();
-        foreach ($invoice->items()->get() as $item){
+        foreach ($invoice->items()->get() as $item) {
             $items[] = [
                 'quantity' => 1,
                 'name' => $item->description,
-                'price' => (float) $item->amount,
+                'price' => (float)$item->amount,
             ];
         }
         return $items;
@@ -47,16 +52,18 @@ class CreditCard extends \Xendit\Lib\ActionBase
 
     /**
      * @param array $params
+     * @param int|null $auth_id
+     * @param int|null $cvn
      * @return array
      * @throws \Exception
      */
-    public function generateCCPaymentRequest(array $params = [])
+    public function generateCCPaymentRequest(array $params = [], int $auth_id = null, int $cvn = null): array
     {
         $invoice = $this->getInvoice($params["invoiceid"]);
-        if(empty($invoice))
+        if (empty($invoice))
             throw new \Exception("Invoice does not exist");
 
-        return [
+        $payload = [
             "amount" => $params["amount"],
             "currency" => $params["currency"],
             "token_id" => $params["gatewayid"],
@@ -67,5 +74,109 @@ class CreditCard extends \Xendit\Lib\ActionBase
             "is_recurring" => true,
             "should_charge_multiple_use_token" => true
         ];
+
+        if (!empty($auth_id)) {
+            $payload["authentication_id"] = $auth_id;
+        }
+        if (!empty($cvn)) {
+            $payload["card_cvn"] = $cvn;
+        }
+        return $payload;
+    }
+
+    /**
+     * @return false|string
+     * @throws \Exception
+     */
+    public function getCardSetting()
+    {
+        $ccSettings = $this->xenditRequest->getCCSettings();
+        $midSettings = $this->xenditRequest->getMIDSettings();
+        $ccSettings['supported_card_brands'] = !empty($midSettings['supported_card_brands']) ? $midSettings['supported_card_brands'] : array();
+        return $ccSettings;
+    }
+
+    /**
+     * @param array $params
+     * @param string $verificationHash
+     * @return void
+     */
+    public function compareHash(array $params = [], string $verificationHash)
+    {
+        $comparisonHash = sha1(
+            implode('|', [
+                $params["publicKey"],
+                $params["customerId"],
+                $params["invoiceId"],
+                $params["amount"],
+                $params["currencyCode"],
+                $params["secretKey"]
+            ])
+        );
+
+        if ($verificationHash !== $comparisonHash) {
+            return false;
+        }
+    }
+
+    /**
+     * @param array $params
+     * @param bool $isNew
+     * @return bool
+     * @throws \Exception
+     */
+    public function saveCreditCardToken(array $params = [], bool $isNew = true)
+    {
+        try {
+            if ($isNew) {
+                createCardPayMethod(
+                    $params["customerId"],
+                    $params["gatewayModuleName"],
+                    $params["cardLastFour"],
+                    $params["cardExpiryDate"],
+                    $params["cardType"],
+                    null, //start date
+                    null, //issue number
+                    $params["cardToken"],
+                    "billing",
+                    $params["cardDescription"]
+                );
+                logTransaction($params["paymentmethod"], $params, 'Create Success');
+            } else {
+                // Function available in WHMCS 7.9 and later
+                updateCardPayMethod(
+                    $params["customerId"],
+                    $params["payMethodId"],
+                    $params["cardExpiryDate"],
+                    null, // card start date
+                    null, // card issue number
+                    $params["cardToken"]
+                );
+
+                // Update card detail
+                $client = \WHMCS\User\Client::findOrFail($params["customerId"]);
+                $payMethod = $client->payMethods()->where("id", $params["payMethodId"])->first();
+                if (!$payMethod) {
+                    throw new \Exception("PayMethod ID not found");
+                }
+                $payment = $payMethod->payment;
+                if (!$payMethod->isCreditCard()) {
+                    throw new \Exception("Invalid PayMethod");
+                }
+                $payment->setLastFour($params["cardLastFour"]);
+                $payment->setCardType($params["cardType"]);
+                $payment->validateRequiredValuesForEditPreSave()->save();
+
+                // Save description
+                $payMethod->setDescription($params["cardDescription"]);
+                $payMethod->save();
+
+                logTransaction($params["paymentmethod"], $params, 'Update Success');
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
     }
 }
