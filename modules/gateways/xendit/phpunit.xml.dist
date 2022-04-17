@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd" bootstrap="tests/_bootstrap.php">
-  <coverage/>
+   <coverage processUncoveredFiles="true">
+    <include>
+      <directory suffix=".php">.</directory>
+    </include>
+    <exclude>
+      <directory>vendor/</directory>
+      <directory>tests/</directory>
+    </exclude>
+  </coverage>
   <testsuites>
     <testsuite name="WHMCS Xendit Payment Gateway Tests">
-      <directory suffix=".php">tests/*</directory>
+      <directory suffix=".php">tests/</directory>
     </testsuite>
   </testsuites>
 </phpunit>

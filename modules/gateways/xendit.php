@@ -4,6 +4,7 @@ if (!defined("WHMCS")) {
 }
 
 //autoload gateway functions
+require_once __DIR__ . '/../../init.php';
 require_once __DIR__ . '/../../includes/gatewayfunctions.php';
 
 require __DIR__ . '/xendit/autoload.php';

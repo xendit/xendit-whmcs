@@ -1,7 +1,7 @@
 <?php
 namespace Xendit\lib;
 
-use WHMCS\Database\Capsule;
+use Illuminate\Database\Capsule\Manager as Capsule;
 
 class Migrate
 {

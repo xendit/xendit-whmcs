@@ -14,7 +14,9 @@
  * @copyright Copyright (c) WHMCS Limited 2017
  * @license http://www.whmcs.com/license/ WHMCS Eula
  */
-class WHMCSModuleTest extends PHPUnit_Framework_TestCase
+use PHPUnit\Framework\TestCase;
+
+class WHMCSModuleTest extends TestCase
 {
     /** @var string $moduleName */
     protected $moduleName = 'xendit';
@@ -33,11 +35,13 @@ class WHMCSModuleTest extends PHPUnit_Framework_TestCase
     public function testRequiredConfigOptionsParametersAreDefined()
     {
         $result = call_user_func($this->moduleName . '_config');
-        $this->assertArrayHasKey('name', $result);
+        $this->assertArrayHasKey('FriendlyName', $result);
         $this->assertArrayHasKey('description', $result);
-        $this->assertArrayHasKey('author', $result);
-        $this->assertArrayHasKey('language', $result);
-        $this->assertArrayHasKey('version', $result);
-        $this->assertArrayHasKey('fields', $result);
+        $this->assertArrayHasKey('xenditTestMode', $result);
+        $this->assertArrayHasKey('xenditTestPublicKey', $result);
+        $this->assertArrayHasKey('xenditTestSecretKey', $result);
+        $this->assertArrayHasKey('xenditPublicKey', $result);
+        $this->assertArrayHasKey('xenditSecretKey', $result);
+        $this->assertArrayHasKey('xenditExternalPrefix', $result);
     }
 }
