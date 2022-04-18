@@ -2,7 +2,7 @@
 
 namespace Xendit\Lib;
 
-use WHMCS\Database\Capsule;
+use Illuminate\Database\Capsule\Manager as Capsule;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Xendit\Lib\Model\XenditTransaction;
 use Xendit\Lib\XenditRequest;
