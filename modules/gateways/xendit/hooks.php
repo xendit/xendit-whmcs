@@ -8,8 +8,7 @@ use Xendit\Lib\Recurring;
  * @param $vars
  * @return void
  */
-add_hook('InvoiceCreation', 1, function ($vars)
-{
+add_hook('InvoiceCreation', 1, function ($vars) {
     $xenditRecurring = new Recurring();
     $invoice = $xenditRecurring->getInvoice($vars['invoiceid']);
 

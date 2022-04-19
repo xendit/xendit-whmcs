@@ -41,7 +41,7 @@ if ($action == 'updatecc' || $action == "createcc") {
     $payMethodId = isset($_REQUEST['custom_reference']) ? (int)$_REQUEST['custom_reference'] : 0;
 
     // validate hash
-    if ($creditCard->compareHash($params, $verificationHash)) {
+    if ($creditCard->compareHash($verificationHash, $params)) {
         logTransaction($gatewayParams['paymentmethod'], $_REQUEST, "Invalid Hash");
         die('Invalid hash.');
     }
@@ -60,7 +60,6 @@ if ($action == 'updatecc' || $action == "createcc") {
             );
             exit;
         } catch (Exception $e) {
-
             // Log to gateway log as unsuccessful.
             logTransaction($gatewayParams['paymentmethod'], $_REQUEST, $e->getMessage());
 
@@ -89,18 +88,14 @@ if ($action == 'updatecc' || $action == "createcc") {
 } else {
     // use for callback
     $arrRequestInput = json_decode(file_get_contents("php://input"), true);
-    if (
-        !empty($arrRequestInput)
-        && isset($arrRequestInput['external_id'])
-        && !empty($arrRequestInput['external_id'])
-    ) {
+    if (!empty($arrRequestInput) && isset($arrRequestInput['external_id']) && !empty($arrRequestInput['external_id'])) {
         $invoiceId = $callback->getInvoiceIdFromExternalId($arrRequestInput['external_id']);
         $transactions = $callback->getTransactionFromInvoiceId($invoiceId);
 
         try {
             // Get invoice from Xendit
             $xenditInvoice = $xenditRequest->getInvoiceById($arrRequestInput['id']);
-            if(isset($arrRequestInput['credit_card_token'])){
+            if (isset($arrRequestInput['credit_card_token'])) {
                 $xenditInvoice['credit_card_token'] = $arrRequestInput['credit_card_token'];
             }
             $result = $callback->confirmInvoice(

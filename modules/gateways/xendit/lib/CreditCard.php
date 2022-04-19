@@ -60,8 +60,9 @@ class CreditCard extends \Xendit\Lib\ActionBase
     public function generateCCPaymentRequest(array $params = [], int $auth_id = null, int $cvn = null): array
     {
         $invoice = $this->getInvoice($params["invoiceid"]);
-        if (empty($invoice))
+        if (empty($invoice)) {
             throw new \Exception("Invoice does not exist");
+        }
 
         $payload = [
             "amount" => $params["amount"],
@@ -97,11 +98,11 @@ class CreditCard extends \Xendit\Lib\ActionBase
     }
 
     /**
-     * @param array $params
      * @param string $verificationHash
-     * @return void
+     * @param array $params
+     * @return false|void
      */
-    public function compareHash(array $params = [], string $verificationHash)
+    public function compareHash(string $verificationHash, array $params = [])
     {
         $comparisonHash = sha1(
             implode('|', [

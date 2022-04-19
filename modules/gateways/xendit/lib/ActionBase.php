@@ -239,7 +239,8 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
             // Save payment method
             $transactions = $this->getTransactionFromInvoiceId($invoiceId);
             if (!empty($transactions)) {
-                $this->updateTransactions($transactions,
+                $this->updateTransactions(
+                    $transactions,
                     [
                         "status" => XenditTransaction::STATUS_PAID,
                         "payment_method" => $xenditInvoiceData["payment_method"]

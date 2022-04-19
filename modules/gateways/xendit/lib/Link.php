@@ -80,9 +80,9 @@ class Link extends ActionBase
      */
     protected function isRefererUrlFromCart(): bool
     {
-        if(isset($_SERVER["HTTP_REFERER"]) && ltrim($_SERVER["SCRIPT_NAME"], "/") == "viewinvoice.php"){
+        if (isset($_SERVER["HTTP_REFERER"]) && ltrim($_SERVER["SCRIPT_NAME"], "/") == "viewinvoice.php") {
             $uri = parse_url($_SERVER['HTTP_REFERER']);
-            if(ltrim($uri["path"], "/") == "cart.php"){
+            if (ltrim($uri["path"], "/") == "cart.php") {
                 return true;
             }
         }
@@ -96,8 +96,8 @@ class Link extends ActionBase
      */
     protected function generateFormParam(array $params, string $invoiceUrl = "")
     {
-        if($this->isRefererUrlFromCart()){
-            header("Location: " . $invoiceUrl );
+        if ($this->isRefererUrlFromCart()) {
+            header("Location: " . $invoiceUrl);
             exit();
         }
 
@@ -149,7 +149,6 @@ class Link extends ActionBase
 
             // If force create new invoice
             if ($force) {
-
                 $payload = $this->generateInvoicePayload($params, true);
                 $createInvoice = $this->xenditRequest->createInvoice($payload);
                 $url = $createInvoice['invoice_url'];

@@ -45,14 +45,14 @@ function xendit_config()
  */
 function xendit_deactivate()
 {
-    try{
+    try {
         (new \Xendit\Lib\Migrate())->removeTransactionTable();
         return [
             // Supported values here include: success, error or info
             'status' => 'success',
             'description' => 'Drop Xendit data success.'
         ];
-    }catch (\Exception $e){
+    } catch (\Exception $e) {
         return [
             // Supported values here include: success, error or info
             "status" => "error",
@@ -126,7 +126,6 @@ function xendit_capture($params)
     }
 
     if (!empty($response) && isset($response['status']) && $response['status'] == "CAPTURED") {
-
         // Save transaction status
         $xenditRecurring = new Recurring();
         $transactions = $xenditRecurring->getTransactionFromInvoiceId($params["invoiceid"]);
@@ -258,7 +257,7 @@ function xendit_remoteinput($params)
  */
 function xendit_remoteupdate($params)
 {
-    if (strpos($_REQUEST["rp"], "/admin/") !== FALSE) {
+    if (strpos($_REQUEST["rp"], "/admin/") !== false) {
         return <<<HTML
 <div class="alert alert-info text-center">
     Updating your card/bank is not possible. Please create a new Pay Method to make changes.
@@ -354,9 +353,9 @@ function xendit_adminstatusmsg($params)
  *
  * @param array $params Payment Gateway Module Parameters
  *
+ * @return array Transaction response status
  * @see https://developers.whmcs.com/payment-gateways/refunds/
  *
- * @return array Transaction response status
  */
 function xendit_refund($params)
 {
@@ -369,32 +368,32 @@ function xendit_refund($params)
 
     // perform API call to initiate refund and interpret result
     $xenditRequest = new \Xendit\Lib\XenditRequest();
-    try{
+    try {
         $invoiceResponse = $xenditRequest->getInvoiceById($transactionIdToRefund);
         $chargeId = $invoiceResponse['credit_card_charge_id'];
-    }catch (Exception $e){
-        if(str_contains($e->getMessage(), "INVOICE_NOT_FOUND_ERROR")){
+    } catch (Exception $e) {
+        if (str_contains($e->getMessage(), "INVOICE_NOT_FOUND_ERROR")) {
             // The invoice created via CLI & chargeID saved to transaction
             $chargeId = $transactionIdToRefund;
         }
     }
 
-    if(empty($chargeId)) {
+    if (empty($chargeId)) {
         return array(
-            'status'    => 'error',
-            'rawdata'   => 'Can not refund the payment because because it is not credit card transaction'
+            'status' => 'error',
+            'rawdata' => 'Can not refund the payment because because it is not credit card transaction'
         );
     }
 
     $body = array(
-        'store_name'    => $companyName,
-        'external_id'   => 'whmcs-refund-' . uniqid(),
-        'amount'        => $refundAmount
+        'store_name' => $companyName,
+        'external_id' => 'whmcs-refund-' . uniqid(),
+        'amount' => $refundAmount
     );
 
-    try{
+    try {
         $refundResponse = $xenditRequest->createRefund($chargeId, $body);
-    }catch (Exception $e){
+    } catch (Exception $e) {
         return array(
             'status' => 'declined',
             'rawdata' => $e->getMessage(),

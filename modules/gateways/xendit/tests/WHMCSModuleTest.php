@@ -1,4 +1,6 @@
 <?php
+namespace Xendit\Tests;
+
 /**
  * WHMCS Xendit Payment Gateway Test
  *
@@ -14,6 +16,7 @@
  * @copyright Copyright (c) WHMCS Limited 2017
  * @license http://www.whmcs.com/license/ WHMCS Eula
  */
+
 use PHPUnit\Framework\TestCase;
 
 class WHMCSModuleTest extends TestCase
