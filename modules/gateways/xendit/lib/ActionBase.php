@@ -12,6 +12,8 @@ use WHMCS\Billing\Invoice\Item;
 
 class ActionBase
 {
+    const ALLOW_CURRENCIES = ['IDR', 'PHP', 'USD'];
+
     protected $moduleDomain = 'xendit';
     protected $xenditRequest;
     protected $xenditTransaction;
@@ -239,7 +241,8 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
             // Save payment method
             $transactions = $this->getTransactionFromInvoiceId($invoiceId);
             if (!empty($transactions)) {
-                $this->updateTransactions($transactions,
+                $this->updateTransactions(
+                    $transactions,
                     [
                         "status" => XenditTransaction::STATUS_PAID,
                         "payment_method" => $xenditInvoiceData["payment_method"]

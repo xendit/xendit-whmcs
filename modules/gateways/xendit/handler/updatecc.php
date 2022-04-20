@@ -28,17 +28,17 @@ $customReference = $_POST['custom_reference'] ?? '';
 $verificationHash = $_POST['verification_hash'] ?? '';
 
 $comparisonHash = sha1(
- implode('|', [
+    implode('|', [
      $publicKey,
      $customerId,
      $invoiceId,
      $amount,
      $currencyCode,
      $secretKey
- ])
+    ])
 );
 if ($verificationHash !== $comparisonHash) {
- die('Invalid hash.');
+    die('Invalid hash.');
 }
 
 if ($action === 'payment') {

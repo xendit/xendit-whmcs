@@ -4,7 +4,7 @@ namespace Xendit\Lib;
 
 class XenditRequest
 {
-    protected $tpi_server_domain  = "https://tpi.xendit.co";
+    protected $tpi_server_domain = "https://tpi.xendit.co";
 
     /**
      * @return mixed
@@ -42,12 +42,12 @@ class XenditRequest
     }
 
     /**
-     * @param string $method
      * @param string $endpoint
      * @param array $param
+     * @param string $method
      * @return bool|string
      */
-    protected function request(string $method = 'GET', string $endpoint, array $param = [])
+    protected function request(string $endpoint, array $param = [], string $method = 'GET')
     {
         $curl = curl_init();
 
@@ -81,7 +81,7 @@ class XenditRequest
             'x-plugin-name: WHMCS',
             'x-plugin-version: 1.0.1'
         );
-        $default_header[] = 'Authorization: Basic '.base64_encode(sprintf("%s:", $this->getSecretKey()));
+        $default_header[] = 'Authorization: Basic ' . base64_encode(sprintf("%s:", $this->getSecretKey()));
         if (!empty($version)) {
             $default_header[] = 'x-api-version: ' . $version;
         }
@@ -112,10 +112,11 @@ class XenditRequest
     {
         try {
             $response = $this->request(
-                "GET",
-                '/payment/xendit/invoice/' . $invoice_id, [
-                'headers' => $this->defaultHeader()
-            ]);
+                '/payment/xendit/invoice/' . $invoice_id,
+                [
+                    'headers' => $this->defaultHeader()
+                ]
+            );
             return $this->processResponse($response);
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
@@ -130,15 +131,17 @@ class XenditRequest
      */
     public function createRefund(string $chargeId, array $payload = [])
     {
-        try{
+        try {
             $response = $this->request(
-                "POST",
-                '/payment/xendit/credit-card/charges/' . $chargeId . '/refund', [
-                'headers' => $this->defaultHeader(),
-                'body' => json_encode($payload)
-            ]);
+                '/payment/xendit/credit-card/charges/' . $chargeId . '/refund',
+                [
+                    'headers' => $this->defaultHeader(),
+                    'body' => json_encode($payload)
+                ],
+                "POST"
+            );
             return $this->processResponse($response);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
     }
@@ -151,10 +154,14 @@ class XenditRequest
     public function createInvoice(array $param = [])
     {
         try {
-            $response = $this->request("POST", '/payment/xendit/invoice', [
-                'headers' => $this->defaultHeader(),
-                'body' => json_encode($param)
-            ]);
+            $response = $this->request(
+                '/payment/xendit/invoice',
+                [
+                    'headers' => $this->defaultHeader(),
+                    'body' => json_encode($param)
+                ],
+                "POST"
+            );
             return $this->processResponse($response);
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
@@ -169,10 +176,14 @@ class XenditRequest
     public function createHost3DS(array $param = [])
     {
         try {
-            $response = $this->request("POST", '/payment/xendit/credit-card/hosted-3ds', [
-                'headers' => $this->defaultHeader('2020-02-14'),
-                'body' => json_encode($param)
-            ]);
+            $response = $this->request(
+                '/payment/xendit/credit-card/hosted-3ds',
+                [
+                    'headers' => $this->defaultHeader('2020-02-14'),
+                    'body' => json_encode($param)
+                ],
+                "POST"
+            );
             return $this->processResponse($response);
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
@@ -187,10 +198,14 @@ class XenditRequest
     public function createCharge($payload)
     {
         try {
-            $response = $this->request("POST", '/payment/xendit/credit-card/charges', [
-                'headers' => $this->defaultHeader(),
-                'body' => json_encode($payload)
-            ]);
+            $response = $this->request(
+                '/payment/xendit/credit-card/charges',
+                [
+                    'headers' => $this->defaultHeader(),
+                    'body' => json_encode($payload)
+                ],
+                "POST"
+            );
             return $this->processResponse($response);
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
@@ -205,7 +220,7 @@ class XenditRequest
     public function getCardInfo(string $card_charge_id)
     {
         try {
-            $response = $this->request("GET", '/payment/xendit/credit-card/charges/' . $card_charge_id, [
+            $response = $this->request('/payment/xendit/credit-card/charges/' . $card_charge_id, [
                 'headers' => $this->defaultHeader()
             ]);
             return $this->processResponse($response);
@@ -222,7 +237,7 @@ class XenditRequest
     public function getCardTokenInfo(string $card_token)
     {
         try {
-            $response = $this->request("GET", '/payment/xendit/credit-card/token/' . $card_token, [
+            $response = $this->request('/payment/xendit/credit-card/token/' . $card_token, [
                 'headers' => $this->defaultHeader()
             ]);
             return $this->processResponse($response);

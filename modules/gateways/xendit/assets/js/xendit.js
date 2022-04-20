@@ -87,7 +87,7 @@ jQuery(function ($) {
         },
 
         block: function () {
-            if(cc_xendit_form.btnSaveCC.find('.loading-icon').length == 0){
+            if (cc_xendit_form.btnSaveCC.find('.loading-icon').length == 0) {
                 cc_xendit_form.btnSaveCC.append('<div class="loading-icon spinner-border spinner-border-sm" role="status"></div>');
             }
             cc_xendit_form.btnSaveCC.prop('disabled', true);
@@ -111,20 +111,8 @@ jQuery(function ($) {
             return true;
         },
 
-        toggleInputError: function (erred, input) {
-            input.parent('.form-group').toggleClass('has-error', erred);
-            return input;
-        },
-
-        extractMonth: function (date) {
-            var expiryArray = date.split("/");
-            return String(expiryArray[0]).length === 1 ? '0' + String(expiryArray[0]) : String(expiryArray[0]);
-        },
-
-        extractYear: function (date) {
-            var expiryArray = date.split("/");
-            var fullYear = new Date().getFullYear();
-            return String(String(fullYear).substr(0, 2) + expiryArray[1]);
+        extractMonth: function (month) {
+            return month.toString().length < 2 ? '0' + month.toString() : month.toString();
         },
 
         onSubmit: function (e) {
@@ -140,7 +128,7 @@ jQuery(function ($) {
                     success: function (response) {
                         if (!response.error) {
                             var message = cc_xendit_form.isAddNewCC() ? "Payment method added successfully" : "Payment method updated successfully"
-                            cc_xendit_form.form.append('<p class="message text-success">'+message+'</p>')
+                            cc_xendit_form.form.append('<p class="message text-success">' + message + '</p>')
                         } else {
                             cc_xendit_form.form.append('<p class="message text-danger">' + response.message + '</p>')
                         }
@@ -154,7 +142,8 @@ jQuery(function ($) {
 
                 var card = cc_xendit_form.inputCardNumber.val().replace(/\s/g, '');
                 var cvn = cc_xendit_form.inputCardCVV.val().replace(/ /g, '');
-                var expiry = cc_xendit_form.inputCardExpiry.val().replace(/ /g, '');
+                var card_type = $.payment.cardType(card);
+                var expiry = cc_xendit_form.inputCardExpiry.payment('cardExpiryVal');
 
                 // check if all card details are not empty
                 if (!card || !cvn || !expiry) {
@@ -173,7 +162,7 @@ jQuery(function ($) {
                 }
 
                 // validate card number
-                if (!Xendit.card.validateCardNumber(card)) {
+                if (!$.payment.validateCardNumber(card)) {
                     var err = {
                         message: 'Incorrect number'
                     }
@@ -181,7 +170,7 @@ jQuery(function ($) {
                 }
 
                 // validate expiry format MM/YY
-                if (expiry.length != 5) {
+                if (!$.payment.validateCardExpiry(expiry.month, expiry.year)) {
                     var err = {
                         message: 'Invalid expire'
                     }
@@ -189,7 +178,7 @@ jQuery(function ($) {
                 }
 
                 // validate cvc
-                if (cvn.length < 3) {
+                if (!$.payment.validateCardCVC(cvn, card_type)) {
                     var err = {
                         message: 'Invalid cvn'
                     }
@@ -198,8 +187,8 @@ jQuery(function ($) {
 
                 var data = {
                     "card_number": card,
-                    "card_exp_month": cc_xendit_form.extractMonth(expiry),
-                    "card_exp_year": cc_xendit_form.extractYear(expiry),
+                    "card_exp_month": cc_xendit_form.extractMonth(expiry.month),
+                    "card_exp_year": expiry.year.toString(),
                     "card_cvn": cvn,
                     "is_multiple_use": true,
                     "on_behalf_of": "",
@@ -288,7 +277,7 @@ jQuery(function ($) {
             return 'unknown';
         },
 
-        backToPaymentMethod: function (e){
+        backToPaymentMethod: function (e) {
             parent.location.href = cc_xendit_form.btnCancel.data("href");
         }
     };
