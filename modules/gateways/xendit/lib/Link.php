@@ -152,7 +152,6 @@ class Link extends ActionBase
     public function generatePaymentLink(array $params, bool $force = false): string
     {
         try {
-
             if ($this->isRecurring($params["invoiceid"]) && !$this->isViewInvoicePage()) {
                 return false;
             }

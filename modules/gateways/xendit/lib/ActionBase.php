@@ -278,5 +278,4 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
         }
         return false;
     }
-
 }
