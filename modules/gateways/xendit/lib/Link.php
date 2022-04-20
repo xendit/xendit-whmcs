@@ -80,7 +80,7 @@ class Link extends ActionBase
      */
     protected function isRefererUrlFromCart(): bool
     {
-        if (isset($_SERVER["HTTP_REFERER"]) && ltrim($_SERVER["SCRIPT_NAME"], "/") == "viewinvoice.php") {
+        if (isset($_SERVER["HTTP_REFERER"]) && $this->isViewInvoicePage()) {
             $uri = parse_url($_SERVER['HTTP_REFERER']);
             if (ltrim($uri["path"], "/") == "cart.php") {
                 return true;
@@ -90,11 +90,19 @@ class Link extends ActionBase
     }
 
     /**
+     * @return bool
+     */
+    protected function isViewInvoicePage(): bool
+    {
+        return ltrim($_SERVER["SCRIPT_NAME"], "/") == "viewinvoice.php";
+    }
+
+    /**
      * @param array $params
      * @param string $invoiceUrl
      * @return string
      */
-    protected function generateFormParam(array $params, string $invoiceUrl)
+    protected function generateFormParam(array $params, string $invoiceUrl): string
     {
         if ($this->isRefererUrlFromCart()) {
             header("Location: " . $invoiceUrl);
@@ -144,6 +152,11 @@ class Link extends ActionBase
     public function generatePaymentLink(array $params, bool $force = false): string
     {
         try {
+
+            if ($this->isRecurring($params["invoiceid"]) && !$this->isViewInvoicePage()) {
+                return false;
+            }
+
             // Get transaction
             $transactions = $this->getTransactionFromInvoiceId($params["invoiceid"]);
 

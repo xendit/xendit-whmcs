@@ -256,4 +256,27 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
             throw new \Exception($exception->getMessage());
         }
     }
+
+    /**
+     * @param int $invoiceId
+     * @return mixed
+     */
+    public function getRecurringBillingInfo(int $invoiceId)
+    {
+        return getRecurringBillingValues($invoiceId);
+    }
+
+    /**
+     * @param int $invoiceId
+     * @return bool
+     */
+    public function isRecurring(int $invoiceId): bool
+    {
+        $recurringData = $this->getRecurringBillingInfo($invoiceId);
+        if (!isset($recurringData["firstpaymentamount"]) && !isset($recurringData['firstcycleperiod'])) {
+            return true;
+        }
+        return false;
+    }
+
 }
