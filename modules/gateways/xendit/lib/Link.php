@@ -94,7 +94,7 @@ class Link extends ActionBase
      * @param string $invoiceUrl
      * @return string
      */
-    protected function generateFormParam(array $params, string $invoiceUrl = "")
+    protected function generateFormParam(array $params, string $invoiceUrl)
     {
         if ($this->isRefererUrlFromCart()) {
             header("Location: " . $invoiceUrl);

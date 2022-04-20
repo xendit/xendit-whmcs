@@ -1,5 +1,6 @@
 <?php
 
+use Xendit\Lib\ActionBase;
 use Xendit\Lib\Recurring;
 
 /**
@@ -19,4 +20,20 @@ add_hook('InvoiceCreation', 1, function ($vars) {
 
     // Save xendit transaction
     $xenditRecurring->storeTransactions($vars['invoiceid']);
+});
+
+/**
+ * Hook to show Xendit payment gateway based on currency
+ *
+ * @param $vars
+ * @return array|void
+ */
+add_hook("ClientAreaPageCart", 1, function ($vars) {
+    if ($vars['templatefile'] == 'viewcart') {
+        $activeCurrency = $vars['activeCurrency']->code;
+        if (!in_array($activeCurrency, ActionBase::ALLOW_CURRENCIES)) {
+            unset($vars['gateways']["xendit"]);
+        }
+    }
+    return $vars;
 });

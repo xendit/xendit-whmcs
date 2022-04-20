@@ -12,6 +12,8 @@ use WHMCS\Billing\Invoice\Item;
 
 class ActionBase
 {
+    const ALLOW_CURRENCIES = ['IDR', 'PHP', 'USD'];
+
     protected $moduleDomain = 'xendit';
     protected $xenditRequest;
     protected $xenditTransaction;
