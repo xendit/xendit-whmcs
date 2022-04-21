@@ -53,7 +53,7 @@ class Link extends ActionBase
             'description' => $params["description"],
             'items' => $this->extractItems($invoice),
             'fees' => array(['type' => 'Payment Fee', 'value' => (float)$params['paymentfee']]),
-            'amount' => $params['amount'] + (float)$params['paymentfee'],
+            'amount' => $this->roundUpTotal($params['amount'] + (float)$params['paymentfee']),
             'client_type' => 'INTEGRATION',
             'platform_callback_url' => $params["systemurl"] . $this->callbackUrl,
             'success_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),

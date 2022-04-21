@@ -1,4 +1,5 @@
 <?php
+
 namespace Xendit\Tests;
 
 /**
@@ -46,5 +47,65 @@ class WHMCSModuleTest extends TestCase
         $this->assertArrayHasKey('xenditPublicKey', $result);
         $this->assertArrayHasKey('xenditSecretKey', $result);
         $this->assertArrayHasKey('xenditExternalPrefix', $result);
+    }
+
+    /**
+     * @return array
+     */
+    public function totalDataProvider(): array
+    {
+        return [
+            [
+                "xenditTotal" => 1000,
+                "whmcsTotal" => 999.9555555,
+                "expectTotal" => 999.9555555
+            ],
+            [
+                "xenditTotal" => 1000,
+                "whmcsTotal" => 999,
+                "expectTotal" => 1000
+            ],
+            [
+                "xenditTotal" => 9999,
+                "whmcsTotal" => 9999.5,
+                "expectTotal" => 9999
+            ],
+            [
+                "xenditTotal" => 9999,
+                "whmcsTotal" => 9998,
+                "expectTotal" => 9999
+            ],
+            [
+                "xenditTotal" => 20000,
+                "whmcsTotal" => 19999.01,
+                "expectTotal" => 19999.01
+            ]
+        ];
+    }
+
+    /**
+     * Test the round up total should have no decimal
+     */
+    public function testRoundUpTotalNotHasDecimal()
+    {
+        $actionBase = new \Xendit\Lib\ActionBase();
+
+        foreach ($this->totalDataProvider() as $total) {
+            $roundedTotal = $actionBase->roundUpTotal($total["whmcsTotal"]);
+            $this->assertTrue($roundedTotal == ceil($total["whmcsTotal"]));
+        }
+    }
+
+    /**
+     * Test the callback paid total
+     */
+    public function testCallbackPaidTotal()
+    {
+        $actionBase = new \Xendit\Lib\ActionBase();
+
+        foreach ($this->totalDataProvider() as $total) {
+            $this->assertIsFloat($actionBase->extractPaidAmount($total["xenditTotal"], $total["whmcsTotal"]));
+            $this->assertEquals($total["expectTotal"], $actionBase->extractPaidAmount($total["xenditTotal"], $total["whmcsTotal"]));
+        }
     }
 }

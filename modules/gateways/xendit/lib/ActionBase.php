@@ -180,15 +180,13 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
     }
 
     /**
-     * @param int $invoiceId
-     * @return bool
+     * @param $xenditTotal
+     * @param $whmcsTotal
+     * @return float
      */
-    public function isInvoiceUsedCreditCard(int $invoiceId): bool
+    public function extractPaidAmount($xenditTotal, $whmcsTotal): float
     {
-        $transaction = XenditTransaction::where("invoiceid", $invoiceId)
-            ->where("payment_method", "CREDIT_CARD")
-            ->get();
-        return $transaction->count() > 0;
+        return $xenditTotal - $whmcsTotal > 0 && $xenditTotal - $whmcsTotal < 1 ? (float)$whmcsTotal : (float)$xenditTotal;
     }
 
     /**
@@ -205,8 +203,10 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
                 return false;
             }
 
+            $invoice = $this->getInvoice($invoiceId);
+
             $transactionId = $xenditInvoiceData['id'];
-            $paymentAmount = $xenditInvoiceData['paid_amount'];
+            $paymentAmount = $this->extractPaidAmount($xenditInvoiceData['paid_amount'], $invoice->total);
             $paymentFee = $xenditInvoiceData['fees'][0]["value"];
             $transactionStatus = 'Success';
 
@@ -277,5 +277,14 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
             return true;
         }
         return false;
+    }
+
+    /**
+     * @param float $total
+     * @return float
+     */
+    public function roundUpTotal(float $total): float
+    {
+        return ceil($total);
     }
 }
