@@ -13,7 +13,6 @@
   auto_clear_cache: true
   fetch_all_refs: true
   fail_on_prepare_env_warning: true
-  worker: "default_instance"
   tags: []
   worker_assignment: "FIXED"
   actions:
