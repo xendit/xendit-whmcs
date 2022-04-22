@@ -1,0 +1,50 @@
+- pipeline: "Static Application Security Testing"
+  on: "EVENT"
+  events:
+  - type: "PUSH"
+    refs:
+    - "refs/heads/master"
+    - "refs/heads/*"
+    - "refs/pull/*"
+  priority: "NORMAL"
+  auto_clear_cache: true
+  fetch_all_refs: true
+  worker: "worker-1"
+  trigger_conditions:
+  - trigger_condition: "ALWAYS"
+  tags: []
+  worker_assignment: "FIXED"
+  actions:
+  - action: "Run SAST"
+    type: "RUN_DOCKER_CONTAINER"
+    region: "ap-southeast-1"
+    docker_image_name: "xendit/sast"
+    docker_image_tag: "latest"
+    inline_commands: "run.sh"
+    volume_mappings:
+    - "/:/usr/deploy"
+    shell: "SH"
+    variables:
+    - key: "OWNER"
+      value: "store-channels"
+      type: "VAR"
+    trigger_conditions:
+    - trigger_condition: "VAR_IS"
+      trigger_variable_value: "master"
+      trigger_variable_key: "BUDDY_EXECUTION_PULL_REQUEST_BASE_BRANCH"
+      zone_id: ""
+      trigger_hours: []
+      trigger_days: []
+    integration_hash: "5e85761fc5f225000f97dd99"
+  - action: "Send notification to channel"
+    type: "SLACK"
+    trigger_time: "ON_FAILURE"
+    content: "$BUDDY_PIPELINE_NAME execution failed. Please check details in Sonarqube"
+    blocks: "[{\"type\":\"section\",\"fields\":[{\"type\":\"mrkdwn\",\"text\":\"*Failed execution:* <$BUDDY_EXECUTION_URL|Execution #$BUDDY_EXECUTION_ID $BUDDY_EXECUTION_COMMENT>\"},{\"type\":\"mrkdwn\",\"text\":\"*Pipeline:* <$BUDDY_PIPELINE_URL|$BUDDY_PIPELINE_NAME>\"},{\"type\":\"mrkdwn\",\"text\":\"*Sonar Link:* <https://sonar.tidnex.com/project/issues?id=$BUDDY_PROJECT_NAME&resolved=false&types=VULNERABILITY&severities=BLOCKER|$BUDDY_PROJECT_NAME>\"},{\"type\":\"mrkdwn\",\"text\":\"*Project:* <$BUDDY_PROJECT_URL|$BUDDY_PROJECT_NAME>\"}]}]"
+    channel: "C01G4EK29QR"
+    trigger_conditions:
+    - trigger_condition: "ALWAYS"
+      zone_id: ""
+      trigger_hours: []
+      trigger_days: []
+    integration_hash: "5ea6524a42eba4000eb35fbb"
