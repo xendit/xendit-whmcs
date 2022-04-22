@@ -9,7 +9,6 @@
   priority: "NORMAL"
   auto_clear_cache: true
   fetch_all_refs: true
-  worker: "worker-1"
   trigger_conditions:
   - trigger_condition: "ALWAYS"
   tags: []
