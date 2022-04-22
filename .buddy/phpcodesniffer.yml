@@ -4,7 +4,6 @@
   - type: "PUSH"
     refs:
     - "refs/heads/master"
-    - "refs/heads/*"
   - type: "CREATE_REF"
     refs:
     - "refs/pull/*"
