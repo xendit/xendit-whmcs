@@ -1,4 +1,4 @@
-- pipeline: "Static Application Security Testing"
+- pipeline: "Static Application Security Testing Copy"
   on: "EVENT"
   events:
   - type: "PUSH"
@@ -9,7 +9,6 @@
   priority: "NORMAL"
   auto_clear_cache: true
   fetch_all_refs: true
-  worker: "worker-1"
   trigger_conditions:
   - trigger_condition: "ALWAYS"
   tags: []
