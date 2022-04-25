@@ -24,9 +24,9 @@
     - "# Fix violations of coding standards in PHP, JS and CSS files"
     - "# Available coding standards: MySource, PEAR, PHPCS, PSR1, PSR2, Squiz and Zend"
     - "# More options https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage"
-    - "phpcbf --standard=PSR2 --extensions=php ."
+    - "phpcbf --standard=PSR2 --ignore=*/vendor/* --extensions=php ."
     - "# Detect without auto correction"
-    - "# phpcs -n --standard=PSR2 ."
+    - "phpcs -n --standard=PSR2 --ignore=*/vendor/* ."
     setup_commands:
     - "apt-get update && apt-get install -y git zip"
     - "curl -L https://phar.phpunit.de/phpunit.phar -o /usr/local/bin/phpunit"
