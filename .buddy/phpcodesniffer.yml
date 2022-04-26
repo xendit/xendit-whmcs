@@ -26,7 +26,7 @@
     - "# More options https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage"
     - "phpcbf --standard=PSR2 --ignore=*/vendor/* --extensions=php ."
     - "# Detect without auto correction"
-    - "phpcs -n --standard=PSR2 --ignore=*/vendor/* ."
+    - "phpcs -n --standard=PSR2 --ignore=*/vendor/* --extensions=php ."
     setup_commands:
     - "apt-get update && apt-get install -y git zip"
     - "curl -L https://phar.phpunit.de/phpunit.phar -o /usr/local/bin/phpunit"
