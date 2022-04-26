@@ -98,6 +98,19 @@ class Link extends ActionBase
     }
 
     /**
+     * @param string $systemUrl
+     * @return string
+     */
+    public function getCallbackUrl(string $systemUrl): string
+    {
+        return sprintf(
+            '%s/modules/gateways/callback/%s.php',
+            $systemUrl,
+            $this->getDomainName()
+        );
+    }
+
+    /**
      * @param array $params
      * @param string $invoiceUrl
      * @return string
@@ -124,7 +137,7 @@ class Link extends ActionBase
         $postfields['postcode'] = $params['clientdetails']['postcode'];
         $postfields['country'] = $params['clientdetails']['country'];
         $postfields['phone'] = $params['clientdetails']['phonenumber'];
-        $postfields['callback_url'] = $params['systemurl'] . '/modules/gateways/callback/' . $this->getDomainName() . '.php';
+        $postfields['callback_url'] = $this->getCallbackUrl($params['systemurl']);
         $postfields['return_url'] = $params['returnurl'];
 
         $htmlOutput = '<form id="frm-xendit" method="post" action="' . $invoiceUrl . '">';

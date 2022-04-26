@@ -128,7 +128,17 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
     {
         $config = $this->getXenditConfig();
         $externalPrefix = !empty($config["xenditExternalPrefix"]) ? $config["xenditExternalPrefix"] : "WHMCS-Xendit";
-        return !$retry ? sprintf("%s-%s", $externalPrefix, $invoiceId) : sprintf("%s-%s-%s", $externalPrefix, uniqid(), $invoiceId);
+        return !$retry ? sprintf(
+            "%s-%s",
+            $externalPrefix,
+            $invoiceId
+        )
+            : sprintf(
+                "%s-%s-%s",
+                $externalPrefix,
+                uniqid(),
+                $invoiceId
+            );
     }
 
     /**
@@ -186,7 +196,8 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
      */
     public function extractPaidAmount($xenditTotal, $whmcsTotal): float
     {
-        return $xenditTotal - $whmcsTotal > 0 && $xenditTotal - $whmcsTotal < 1 ? (float)$whmcsTotal : (float)$xenditTotal;
+        $decimalAmount = $xenditTotal - $whmcsTotal ;
+        return $decimalAmount > 0 && $decimalAmount < 1 ? (float)$whmcsTotal : (float)$xenditTotal;
     }
 
     /**

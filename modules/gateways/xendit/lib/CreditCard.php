@@ -86,18 +86,6 @@ class CreditCard extends \Xendit\Lib\ActionBase
     }
 
     /**
-     * @return false|string
-     * @throws \Exception
-     */
-    public function getCardSetting()
-    {
-        $ccSettings = $this->xenditRequest->getCCSettings();
-        $midSettings = $this->xenditRequest->getMIDSettings();
-        $ccSettings['supported_card_brands'] = !empty($midSettings['supported_card_brands']) ? $midSettings['supported_card_brands'] : array();
-        return $ccSettings;
-    }
-
-    /**
      * @param string $verificationHash
      * @param array $params
      * @return false|void
