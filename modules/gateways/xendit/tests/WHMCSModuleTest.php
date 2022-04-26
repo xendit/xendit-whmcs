@@ -105,7 +105,10 @@ class WHMCSModuleTest extends TestCase
 
         foreach ($this->totalDataProvider() as $total) {
             $this->assertIsFloat($actionBase->extractPaidAmount($total["xenditTotal"], $total["whmcsTotal"]));
-            $this->assertEquals($total["expectTotal"], $actionBase->extractPaidAmount($total["xenditTotal"], $total["whmcsTotal"]));
+            $this->assertEquals(
+                $total["expectTotal"],
+                $actionBase->extractPaidAmount($total["xenditTotal"], $total["whmcsTotal"])
+            );
         }
     }
 }
