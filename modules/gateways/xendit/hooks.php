@@ -30,8 +30,9 @@ add_hook('InvoiceCreation', 1, function ($vars) {
  */
 add_hook("ClientAreaPageCart", 1, function ($vars) {
     if ($vars['templatefile'] == 'viewcart') {
+        $actionBase = new ActionBase();
         $activeCurrency = $vars['activeCurrency']->code;
-        if (!in_array($activeCurrency, ActionBase::ALLOW_CURRENCIES)) {
+        if (!$actionBase->validateCompatibilityVersion() || !in_array($activeCurrency, ActionBase::ALLOW_CURRENCIES)) {
             unset($vars['gateways']["xendit"]);
         }
     }
