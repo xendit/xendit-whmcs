@@ -111,4 +111,27 @@ class WHMCSModuleTest extends TestCase
             );
         }
     }
+
+    public function testVersionCompatibility()
+    {
+        $actionBase = new \Xendit\Lib\ActionBase();
+        $versions = [
+            "7.5" => false,
+            "7.6" => false,
+            "7.7.2" => false,
+            "7.8.1" => false,
+            "7.9" => true,
+            "8.0.1" => true,
+            "8.1.1" => true,
+            "8.2" => true,
+            "8.4" => true
+        ];
+        foreach ($versions as $version => $expect) {
+            if ($expect) {
+                $this->assertTrue($actionBase->validateCompatibilityVersion($version));
+            } else {
+                $this->assertFalse($actionBase->validateCompatibilityVersion($version));
+            }
+        }
+    }
 }

@@ -13,6 +13,7 @@ use WHMCS\Billing\Invoice\Item;
 class ActionBase
 {
     const ALLOW_CURRENCIES = ['IDR', 'PHP', 'USD'];
+    const WHMCS_MIN_VERSION_SUPPORT = 7.9;
 
     protected $moduleDomain = 'xendit';
     protected $xenditRequest;
@@ -44,6 +45,24 @@ class ActionBase
      */
     public function createConfig()
     {
+        if (!$this->validateCompatibilityVersion()) {
+            return array(
+                'FriendlyName' => array(
+                    'Type' => 'System',
+                    'Value' => 'Xendit Payment Gateway',
+                ),
+                'description' => array(
+                    'FriendlyName' => '',
+                    'Type' => 'hidden',
+                    'Size' => '72',
+                    'Default' => '',
+                    'Description' => '<div class="alert alert-danger top-margin-5 bottom-margin-5">
+Your WHMCS version not compatibility with Xendit Payment Gateway. <a href="https://marketplace.whmcs.com/product/6411-xendit-payment-gateway" target="_blank">See more</a>
+</div>',
+                ),
+            );
+        }
+
         return array(
             'FriendlyName' => array(
                 'Type' => 'System',
@@ -297,5 +316,16 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
     public function roundUpTotal(float $total): float
     {
         return ceil($total);
+    }
+
+    /***
+     * @param string|null $currentVersion
+     * @return bool
+     */
+    public function validateCompatibilityVersion(string $currentVersion = null): bool
+    {
+        global $CONFIG;
+        $version = !empty($currentVersion) ? $currentVersion : $CONFIG['Version'];
+        return version_compare($version, self::WHMCS_MIN_VERSION_SUPPORT, ">=");
     }
 }
