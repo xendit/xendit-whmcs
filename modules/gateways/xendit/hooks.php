@@ -10,6 +10,9 @@ use Xendit\Lib\Recurring;
  * @return void
  */
 add_hook('InvoiceCreation', 1, function ($vars) {
+    if($vars['status'] == 'Draft')
+        return;
+
     $xenditRecurring = new Recurring();
     $invoice = $xenditRecurring->getInvoice($vars['invoiceid']);
 
