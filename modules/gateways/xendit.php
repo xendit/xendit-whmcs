@@ -186,7 +186,7 @@ function xendit_remoteinput($params)
     $secretKey = $params['xenditTestMode'] == 'on' ? $params['xenditTestSecretKey'] : $params['xenditSecretKey'];
 
     // Client Parameters
-    $clientId = $params["clientdetails"]["id"];
+    $clientId = $params["clientdetails"]["id"] ?? $params['userid'];
 
     // System Parameters
     $systemUrl = $params['systemurl'];
@@ -273,7 +273,7 @@ HTML;
     $remoteStorageToken = $params['gatewayid'];
 
     // Client Parameters
-    $clientId = $params['client_id'];
+    $clientId = $params['client_id'] ?? $params['userid'];
     $payMethodId = $params['paymethodid'];
     $card_expired_date = (new DateTime($params['payMethod']->payment->expiry_date));
     $currencyData = getCurrency($clientId);
