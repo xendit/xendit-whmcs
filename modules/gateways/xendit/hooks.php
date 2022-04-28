@@ -10,6 +10,10 @@ use Xendit\Lib\Recurring;
  * @return void
  */
 add_hook('InvoiceCreation', 1, function ($vars) {
+    if ($vars['status'] == 'Draft') {
+        return;
+    }
+
     $xenditRecurring = new Recurring();
     $invoice = $xenditRecurring->getInvoice($vars['invoiceid']);
 
@@ -31,7 +35,7 @@ add_hook('InvoiceCreation', 1, function ($vars) {
 add_hook("ClientAreaPageCart", 1, function ($vars) {
     if ($vars['templatefile'] == 'viewcart') {
         $actionBase = new ActionBase();
-        $activeCurrency = $vars['activeCurrency']->code;
+        $activeCurrency = $vars['currency']['code'] ?? $vars['activeCurrency']->code;
         if (!$actionBase->validateCompatibilityVersion() || !in_array($activeCurrency, ActionBase::ALLOW_CURRENCIES)) {
             unset($vars['gateways']["xendit"]);
         }
