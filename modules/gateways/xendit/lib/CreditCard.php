@@ -65,7 +65,7 @@ class CreditCard extends \Xendit\Lib\ActionBase
         }
 
         $payload = [
-            "amount" => $params["amount"],
+            "amount" => $this->roundUpTotal($params["amount"]),
             "currency" => $params["currency"],
             "token_id" => $params["gatewayid"],
             "external_id" => $this->generateExternalId($params["invoiceid"]),
