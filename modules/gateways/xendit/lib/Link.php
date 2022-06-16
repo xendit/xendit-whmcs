@@ -82,7 +82,7 @@ class Link extends ActionBase
     {
         if (isset($_SERVER["HTTP_REFERER"]) && $this->isViewInvoicePage()) {
             $uri = parse_url($_SERVER['HTTP_REFERER']);
-            if (ltrim($uri["path"], "/") == "cart.php") {
+            if (in_array("cart.php", explode("/", $uri["path"]))) {
                 return true;
             }
         }
@@ -94,7 +94,7 @@ class Link extends ActionBase
      */
     protected function isViewInvoicePage(): bool
     {
-        return ltrim($_SERVER["SCRIPT_NAME"], "/") == "viewinvoice.php";
+        return in_array("viewinvoice.php", explode("/", $_SERVER["SCRIPT_NAME"] ?? ""));
     }
 
     /**
@@ -165,7 +165,7 @@ class Link extends ActionBase
     public function generatePaymentLink(array $params, bool $force = false): string
     {
         try {
-            if ($this->isRecurring($params["invoiceid"]) && !$this->isViewInvoicePage()) {
+            if (!$this->isViewInvoicePage()) {
                 return false;
             }
 
