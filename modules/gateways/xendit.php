@@ -3,11 +3,14 @@ if (!defined("WHMCS")) {
     die("This file cannot be accessed directly");
 }
 
-//autoload gateway functions
+// autoload gateway functions
 require_once __DIR__ . '/../../init.php';
 require_once __DIR__ . '/../../includes/gatewayfunctions.php';
 
 require __DIR__ . '/xendit/autoload.php';
+
+// defines
+define('XENDIT_PAYMENT_GATEWAY_VERSION', '1.0.5');
 
 use WHMCS\Billing\Invoice;
 use Xendit\Lib\Model\XenditTransaction;
