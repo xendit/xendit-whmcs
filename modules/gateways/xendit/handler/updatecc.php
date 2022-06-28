@@ -62,6 +62,7 @@ if ($action === 'payment') {
     <!-- Bootstrap -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="../assets/css/styles.css" rel="stylesheet" />
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -105,9 +106,9 @@ if ($action === 'payment') {
                        value="<?= $_POST['card_description'] ?? '' ?>"
                 >
                 <div class="input-group-append">
-                                    <span class="input-group-text text-muted">
-                                        (Optional)
-                                    </span>
+                    <span class="input-group-text text-muted">
+                        (Optional)
+                    </span>
                 </div>
             </div>
         </div>

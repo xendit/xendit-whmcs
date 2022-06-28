@@ -5,9 +5,71 @@ namespace Xendit\lib;
 class CreditCard extends \Xendit\Lib\ActionBase
 {
     const CARD_LABEL = [
-        'visa'          => 'Visa',
-        'mastercard'    => 'MasterCard'
+        'visa' => 'Visa',
+        'mastercard' => 'MasterCard'
     ];
+
+    /**
+     * @param $expMonth
+     * @param $expFullYear
+     * @return string
+     */
+    public function extractExpiredCard($expMonth, $expFullYear): string
+    {
+        return sprintf("%s%s", $expMonth, substr($expFullYear, -2));
+    }
+
+    /**
+     * @param string $cartNumber
+     * @return string
+     */
+    public function extractLastFour(string $cartNumber): string
+    {
+        return substr($cartNumber, -4, 4);
+    }
+
+    /**
+     * @param string $cardType
+     * @return string
+     */
+    public function extractCardTypeLabel(string $cardType): string
+    {
+        return self::CARD_LABEL[$cardType] ?? "";
+    }
+
+    /**
+     * @param array $data
+     * @return bool
+     */
+    public function validateCardInfo(array $data): bool
+    {
+        if (empty($data['xendit_card_number']) ||
+            empty($data['xendit_card_exp_month']) ||
+            empty($data['xendit_card_exp_year']) ||
+            empty($data['xendit_card_type'])
+        ) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    public function extractCardData(array $data)
+    {
+        return [
+            "customerId" => $data['customer_id'] ?? '',
+            "cardLastFour" => $this->extractLastFour($data['xendit_card_number']),
+            "cardExpiryDate" => $this->extractExpiredCard($data['xendit_card_exp_month'], $data['xendit_card_exp_year']),
+            "cardType" => $this->extractCardTypeLabel($data['xendit_card_type']),
+            "cardToken" => $data['xendit_token'] ?? "",
+            "cardDescription" => $data['card_description'] ?? "",
+            "invoiceId" => $data['invoice_id'] ?? '',
+            "payMethodId" => $data['custom_reference'] ?? ''
+        ];
+    }
 
     /**
      * @param array $params
@@ -68,7 +130,7 @@ class CreditCard extends \Xendit\Lib\ActionBase
             "amount" => $this->roundUpTotal($params["amount"]),
             "currency" => $params["currency"],
             "token_id" => $params["gatewayid"],
-            "external_id" => $this->generateExternalId($params["invoiceid"]),
+            "external_id" => $this->generateExternalId($params["invoiceid"], true),
             "store_name" => $params["companyname"],
             "items" => $this->extractItems($invoice),
             "customer" => $this->extractCustomerDetail($params),
