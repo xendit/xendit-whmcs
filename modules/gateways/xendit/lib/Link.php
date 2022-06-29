@@ -51,6 +51,7 @@ class Link extends ActionBase
             'external_id' => $this->generateExternalId($params["invoiceid"], $retry),
             'payer_email' => $params['clientdetails']['email'],
             'description' => $params["description"],
+            'currency' => $params['currency'],
             'items' => $this->extractItems($invoice),
             'fees' => array(['type' => 'Payment Fee', 'value' => (float)$params['paymentfee']]),
             'amount' => $this->roundUpTotal($params['amount'] + (float)$params['paymentfee']),
@@ -218,6 +219,15 @@ class Link extends ActionBase
             }
             return $this->generateFormParam($params, $url);
         } catch (\Exception $e) {
+
+            /*
+             * If currency is error
+             * Show the error with currency in message
+             */
+            if(strpos($e->getMessage(), 'UNSUPPORTED_CURRENCY') !== false){
+                throw new \Exception(str_replace("{{currency}}", $params['currency'], $e->getMessage()));
+            }
+
             throw new \Exception($e->getMessage());
         }
     }
