@@ -206,6 +206,13 @@ jQuery(function ($) {
             var token_id = response.id;
             cc_xendit_form.form.append("<input type='hidden' class='xendit_cc_hidden_input' name='xendit_token' value='" + token_id + "'/>");
 
+            if(cc_xendit_form.canUseDynamic3DS()){
+                Xendit.card.threeDSRecommendation({'token_id': token_id}, cc_xendit_form.on3DSRecommendationResponse);
+            }else{
+                let data = {'token_id': token_id, 'amount': '10000'};
+                Xendit.card.createToken(data, cc_xendit_form.onTokenizationResponse);
+            }
+
             // Check if it needs to use 3DS
             Xendit.card.threeDSRecommendation({'token_id': token_id}, cc_xendit_form.on3DSRecommendationResponse);
 
@@ -214,7 +221,8 @@ jQuery(function ($) {
         },
 
         on3DSRecommendationResponse: function(err, response){
-            if (err || !response.should_3ds) {
+            if (err) {
+                cc_xendit_form.handleError();
                 cc_xendit_form.form.submit();
                 return false;
             }
@@ -223,6 +231,10 @@ jQuery(function ($) {
                 let data = {'token_id': $("input[name='xendit_token']").val(), 'amount': '10000'};
                 Xendit.card.createAuthentication(data, cc_xendit_form.on3DSAuthenticationResponse);
                 return;
+            }else{
+                cc_xendit_form.form.append( "<input type='hidden' class='xendit_cc_hidden_input' name='xendit_3ds_authentication_status' value='1'/>" );
+                cc_xendit_form.form.submit();
+                return false;
             }
         },
 

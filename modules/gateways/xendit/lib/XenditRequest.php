@@ -252,7 +252,7 @@ class XenditRequest
      * @return false|string
      * @throws \Exception
      */
-    public function getCreditCardSettings()
+    public function getCardSettings()
     {
         try {
             $response = $this->request('/payment/xendit/settings/credit-card', [

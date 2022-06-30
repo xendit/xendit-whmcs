@@ -13,6 +13,8 @@ require __DIR__ . '/xendit/autoload.php';
 define('XENDIT_PAYMENT_GATEWAY_VERSION', '1.0.6');
 
 use WHMCS\Billing\Invoice;
+use Xendit\Lib\ActionBase;
+use Xendit\Lib\Link;
 use Xendit\Lib\Model\XenditTransaction;
 use Xendit\Lib\Recurring;
 use Xendit\Lib\XenditRequest;
@@ -38,7 +40,7 @@ function xendit_MetaData()
 function xendit_config()
 {
     (new \Xendit\Lib\Migrate())->createTransactionTable();
-    return (new \Xendit\Lib\ActionBase())->createConfig();
+    return (new ActionBase())->createConfig();
 }
 
 /**
@@ -67,11 +69,15 @@ function xendit_deactivate()
 /**
  * @param $params
  * @return string
- * @throws Exception
  */
 function xendit_link($params)
 {
-    return (new \Xendit\Lib\Link())->generatePaymentLink($params);
+    $link = new Link();
+    try{
+        return $link->generatePaymentLink($params);
+    }catch(\Exception $e){
+        return $link->errorMessage($e->getMessage());
+    }
 }
 
 /**
@@ -188,6 +194,16 @@ function xendit_remoteinput($params)
     $publicKey = $params['xenditTestMode'] == 'on' ? $params['xenditTestPublicKey'] : $params['xenditPublicKey'];
     $secretKey = $params['xenditTestMode'] == 'on' ? $params['xenditTestSecretKey'] : $params['xenditSecretKey'];
 
+    $xenditRequest = new XenditRequest();
+
+    // Card settings
+    try{
+        $cardSettings = $xenditRequest->getCardSettings();
+        $canUseDynamic3ds = $cardSettings['can_use_dynamic_3ds'] ?? 0;
+    }catch(\Exception $e){
+        return (new ActionBase)->errorMessage($e->getMessage());
+    }
+
     // Client Parameters
     $clientId = $params["clientdetails"]["id"] ?? $params['userid'];
 
@@ -211,6 +227,7 @@ function xendit_remoteinput($params)
         'customer_id' => $clientId,
         'return_url' => $systemUrl . 'modules/gateways/callback/xendit.php',
         'payment_method_url' => $systemUrl . 'index.php?rp=/account/paymentmethods',
+        'can_use_dynamic_3ds' => $canUseDynamic3ds,
         'verification_hash' => sha1(
             implode('|', [
                 $publicKey,
@@ -275,6 +292,14 @@ HTML;
     $secretKey = $xenditRequest->getSecretKey();
     $remoteStorageToken = $params['gatewayid'];
 
+    // Card settings
+    try{
+        $cardSettings = $xenditRequest->getCardSettings();
+        $canUseDynamic3ds = $cardSettings['can_use_dynamic_3ds'] ?? 0;
+    }catch(\Exception $e){
+        return (new ActionBase)->errorMessage($e->getMessage());
+    }
+
     // Client Parameters
     $clientId = $params['client_id'] ?? $params['userid'];
     $payMethodId = $params['paymethodid'];
@@ -301,6 +326,7 @@ HTML;
         'customer_id' => $clientId,
         'return_url' => $systemUrl . 'modules/gateways/callback/xendit.php',
         'payment_method_url' => $systemUrl . 'index.php?rp=/account/paymentmethods',
+        'can_use_dynamic_3ds' => $canUseDynamic3ds,
         'verification_hash' => sha1(
             implode('|', [
                 $publicKey,

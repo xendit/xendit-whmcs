@@ -347,4 +347,13 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
         echo json_encode($data);
         exit;
     }
+
+    /**
+     * @param string $message
+     * @return string
+     */
+    public function errorMessage(string $message = ''): string
+    {
+        return sprintf('<p class="alert alert-danger">%s</p>', $message);
+    }
 }

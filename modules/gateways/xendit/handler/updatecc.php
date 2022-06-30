@@ -26,6 +26,7 @@ $currencyCode = $_POST['currency'] ?? '';
 $returnUrl = $_POST['return_url'] ?? '';
 $customReference = $_POST['custom_reference'] ?? '';
 $verificationHash = $_POST['verification_hash'] ?? '';
+$canUseDynamic3ds = $_POST['can_use_dynamic_3ds'] ?? 0;
 
 $comparisonHash = sha1(
     implode('|', [
@@ -96,6 +97,7 @@ if ($action === 'payment') {
     <input type="hidden" name="return_url" value="<?= $returnUrl ?>">
     <input type="hidden" name="custom_reference" value="<?= $customReference ?>">
     <input type="hidden" name="verification_hash" value="<?= $verificationHash ?>">
+    <input type="hidden" name="can_use_dynamic_3ds" value="<?= $canUseDynamic3ds ?>">
 
     <div id="newCardInfo">
         <div class="form-group">
