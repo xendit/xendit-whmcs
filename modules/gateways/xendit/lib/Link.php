@@ -63,7 +63,7 @@ class Link extends ActionBase
         ];
 
         // Only add the payment fee if it's > 0
-        if($params['paymentfee'] > 0){
+        if ($params['paymentfee'] > 0) {
             $payload["fees"] = array(['type' => 'Payment Fee', 'value' => (float)$params['paymentfee']]);
         }
 
@@ -225,12 +225,11 @@ class Link extends ActionBase
             }
             return $this->generateFormParam($params, $url);
         } catch (\Exception $e) {
-
             /*
              * If currency is error
              * Show the error with currency in message
              */
-            if(strpos($e->getMessage(), 'UNSUPPORTED_CURRENCY') !== false){
+            if (strpos($e->getMessage(), 'UNSUPPORTED_CURRENCY') !== false) {
                 throw new \Exception(str_replace("{{currency}}", $params['currency'], $e->getMessage()));
             }
 
