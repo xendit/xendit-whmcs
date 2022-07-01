@@ -73,9 +73,9 @@ function xendit_deactivate()
 function xendit_link($params)
 {
     $link = new Link();
-    try{
+    try {
         return $link->generatePaymentLink($params);
-    }catch(\Exception $e){
+    } catch (\Exception $e) {
         return $link->errorMessage($e->getMessage());
     }
 }
@@ -197,10 +197,10 @@ function xendit_remoteinput($params)
     $xenditRequest = new XenditRequest();
 
     // Card settings
-    try{
+    try {
         $cardSettings = $xenditRequest->getCardSettings();
         $canUseDynamic3ds = $cardSettings['can_use_dynamic_3ds'] ?? 0;
-    }catch(\Exception $e){
+    } catch (\Exception $e) {
         return (new ActionBase)->errorMessage($e->getMessage());
     }
 
@@ -293,10 +293,10 @@ HTML;
     $remoteStorageToken = $params['gatewayid'];
 
     // Card settings
-    try{
+    try {
         $cardSettings = $xenditRequest->getCardSettings();
         $canUseDynamic3ds = $cardSettings['can_use_dynamic_3ds'] ?? 0;
-    }catch(\Exception $e){
+    } catch (\Exception $e) {
         return (new ActionBase)->errorMessage($e->getMessage());
     }
 
