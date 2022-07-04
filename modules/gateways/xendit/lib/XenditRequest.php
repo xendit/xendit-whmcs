@@ -245,4 +245,22 @@ class XenditRequest
             throw new \Exception($e->getMessage());
         }
     }
+
+    /**
+     * Get MID settings
+     *
+     * @return false|string
+     * @throws \Exception
+     */
+    public function getCardSettings()
+    {
+        try {
+            $response = $this->request('/payment/xendit/settings/credit-card', [
+                'headers' => $this->defaultHeader()
+            ]);
+            return $this->processResponse($response);
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
+    }
 }

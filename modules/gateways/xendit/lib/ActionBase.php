@@ -233,6 +233,15 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
                 return false;
             }
 
+            /*
+             * Verify the invoice need to update is correct
+             * Avoid update wrong WHMCS invoice
+             */
+            if ($invoiceId != $this->getInvoiceIdFromExternalId($xenditInvoiceData['external_id'])) {
+                throw new \Exception('Invoice id is incorrect!');
+            }
+
+            // Load WHMCS invoice
             $invoice = $this->getInvoice($invoiceId);
 
             $transactionId = $xenditInvoiceData['id'];
@@ -327,5 +336,24 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
         global $CONFIG;
         $version = !empty($currentVersion) ? $currentVersion : $CONFIG['Version'];
         return version_compare($version, self::WHMCS_MIN_VERSION_SUPPORT, ">=");
+    }
+
+    /**
+     * @param array $data
+     * @return void
+     */
+    public function renderJson(array $data)
+    {
+        echo json_encode($data);
+        exit;
+    }
+
+    /**
+     * @param string $message
+     * @return string
+     */
+    public function errorMessage(string $message = ''): string
+    {
+        return sprintf('<p class="alert alert-danger">%s</p>', $message);
     }
 }

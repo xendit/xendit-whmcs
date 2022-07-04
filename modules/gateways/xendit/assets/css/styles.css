@@ -1,0 +1,24 @@
+.three-ds-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 999;
+}
+
+#three-ds-container {
+    width: 550px;
+    height: 450px;
+    line-height: 200px;
+    position: fixed;
+    top: 25%;
+    left: 32%;
+    margin-top: -100px;
+    margin-left: -150px;
+    background-color: #ffffff;
+    border-radius: 5px;
+    text-align: center;
+    z-index: 9999; /* 1px higher than the overlay layer */
+}

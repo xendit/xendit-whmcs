@@ -47,12 +47,12 @@ class Link extends ActionBase
     {
         $invoice = $this->getInvoice($params["invoiceid"]);
 
-        return [
+        $payload = [
             'external_id' => $this->generateExternalId($params["invoiceid"], $retry),
             'payer_email' => $params['clientdetails']['email'],
             'description' => $params["description"],
+            'currency' => $params['currency'],
             'items' => $this->extractItems($invoice),
-            'fees' => array(['type' => 'Payment Fee', 'value' => (float)$params['paymentfee']]),
             'amount' => $this->roundUpTotal($params['amount'] + (float)$params['paymentfee']),
             'client_type' => 'INTEGRATION',
             'platform_callback_url' => $params["systemurl"] . $this->callbackUrl,
@@ -61,6 +61,13 @@ class Link extends ActionBase
             'should_charge_multiple_use_token' => true,
             'customer' => $this->extractCustomer($params)
         ];
+
+        // Only add the payment fee if it's > 0
+        if ($params['paymentfee'] > 0) {
+            $payload["fees"] = array(['type' => 'Payment Fee', 'value' => (float)$params['paymentfee']]);
+        }
+
+        return $payload;
     }
 
     /**
@@ -218,6 +225,14 @@ class Link extends ActionBase
             }
             return $this->generateFormParam($params, $url);
         } catch (\Exception $e) {
+            /*
+             * If currency is error
+             * Show the error with currency in message
+             */
+            if (strpos($e->getMessage(), 'UNSUPPORTED_CURRENCY') !== false) {
+                throw new \Exception(str_replace("{{currency}}", $params['currency'], $e->getMessage()));
+            }
+
             throw new \Exception($e->getMessage());
         }
     }

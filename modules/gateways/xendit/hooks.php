@@ -34,7 +34,6 @@ function hookInvoiceCreation($vars)
         return $xenditRecurring->storeTransactions($vars['invoiceid']);
     }
 }
-
 add_hook('InvoiceCreation', 1, 'hookInvoiceCreation');
 
 

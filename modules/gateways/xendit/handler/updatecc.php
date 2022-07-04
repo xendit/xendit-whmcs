@@ -26,6 +26,7 @@ $currencyCode = $_POST['currency'] ?? '';
 $returnUrl = $_POST['return_url'] ?? '';
 $customReference = $_POST['custom_reference'] ?? '';
 $verificationHash = $_POST['verification_hash'] ?? '';
+$canUseDynamic3ds = $_POST['can_use_dynamic_3ds'] ?? 0;
 
 $comparisonHash = sha1(
     implode('|', [
@@ -62,6 +63,7 @@ if ($action === 'payment') {
     <!-- Bootstrap -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="../assets/css/styles.css" rel="stylesheet" />
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -95,6 +97,7 @@ if ($action === 'payment') {
     <input type="hidden" name="return_url" value="<?= $returnUrl ?>">
     <input type="hidden" name="custom_reference" value="<?= $customReference ?>">
     <input type="hidden" name="verification_hash" value="<?= $verificationHash ?>">
+    <input type="hidden" name="can_use_dynamic_3ds" value="<?= $canUseDynamic3ds ?>">
 
     <div id="newCardInfo">
         <div class="form-group">
@@ -105,9 +108,9 @@ if ($action === 'payment') {
                        value="<?= $_POST['card_description'] ?? '' ?>"
                 >
                 <div class="input-group-append">
-                                    <span class="input-group-text text-muted">
-                                        (Optional)
-                                    </span>
+                    <span class="input-group-text text-muted">
+                        (Optional)
+                    </span>
                 </div>
             </div>
         </div>
