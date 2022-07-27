@@ -354,6 +354,31 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
      */
     public function errorMessage(string $message = ''): string
     {
+        if (strpos($message, 'INVALID_API_KEY') !== false) {
+            $message = 'The API key is invalid.';
+        }
         return sprintf('<p class="alert alert-danger">%s</p>', $message);
+    }
+
+    /**
+     * @param string $header
+     * @param string $content
+     * @return void
+     */
+    protected function sendHeader(string $header, string $content)
+    {
+        if (!headers_sent()) {
+            header(sprintf('%s: %s', $header, $content));
+        }
+    }
+
+    /**
+     * @param string $url
+     * @return void
+     */
+    public function redirectUrl(string $url)
+    {
+        $this->sendHeader("Location", $url);
+        exit();
     }
 }

@@ -75,7 +75,7 @@ jQuery(function ($) {
             if (typeof err != 'undefined') {
                 failure_reason = err.message || err.error_code;
             } else {
-                failure_reason = 'We encountered an issue while processing the checkout. Please contact us. Code: 200035';
+                failure_reason = 'We encountered an issue while processing the update card. Please contact us. Code: 200035';
             }
             cc_xendit_form.validation.html(failure_reason);
             cc_xendit_form.form.append("<input type='hidden' class='xendit_cc_hidden_input' name='xendit_failure_reason' value='" + failure_reason + "'/>");
@@ -209,12 +209,8 @@ jQuery(function ($) {
             if(cc_xendit_form.canUseDynamic3DS()){
                 Xendit.card.threeDSRecommendation({'token_id': token_id}, cc_xendit_form.on3DSRecommendationResponse);
             }else{
-                let data = {'token_id': token_id, 'amount': '10000'};
-                Xendit.card.createToken(data, cc_xendit_form.onTokenizationResponse);
+                Xendit.card.createAuthentication({'token_id': token_id, 'amount': 0}, cc_xendit_form.on3DSAuthenticationResponse);
             }
-
-            // Check if it needs to use 3DS
-            Xendit.card.threeDSRecommendation({'token_id': token_id}, cc_xendit_form.on3DSRecommendationResponse);
 
             // Prevent form submitting
             return false;
@@ -228,11 +224,11 @@ jQuery(function ($) {
             }
 
             if(response.should_3ds){
-                let data = {'token_id': $("input[name='xendit_token']").val(), 'amount': '10000'};
+                let data = {'token_id': $("input[name='xendit_token']").val(), 'amount': '0'};
                 Xendit.card.createAuthentication(data, cc_xendit_form.on3DSAuthenticationResponse);
                 return;
             }else{
-                cc_xendit_form.form.append( "<input type='hidden' class='xendit_cc_hidden_input' name='xendit_3ds_authentication_status' value='1'/>" );
+                cc_xendit_form.form.append( "<input type='hidden' class='xendit_cc_hidden_input' name='xendit_cc_authentication_status' value='1'/>" );
                 cc_xendit_form.form.submit();
                 return false;
             }
@@ -244,7 +240,7 @@ jQuery(function ($) {
                 return false;
             }
 
-            let threeDsAuthenticationSuccess = 0;
+            let ccAuthenticationSuccess = 0;
             if(response.status === 'IN_REVIEW' || response.status === 'CARD_ENROLLED' ){
                 $('body').append('<div class="three-ds-overlay" style="display: none;"></div>' +
                     '<div id="three-ds-container" style="display: none;">\n' +
@@ -255,18 +251,13 @@ jQuery(function ($) {
                 $("#three-ds-container").show();
                 return;
             }else if (response.status === 'APPROVED' || response.status === 'VERIFIED') {
-                threeDsAuthenticationSuccess = 1;
+                ccAuthenticationSuccess = 1;
                 $(".three-ds-overlay").hide();
                 $("#three-ds-container").hide();
             }
-
-            cc_xendit_form.form.append( "<input type='hidden' class='xendit_cc_hidden_input' name='xendit_3ds_authentication_status' value='"+ threeDsAuthenticationSuccess +"'/>" );
+            cc_xendit_form.form.append( "<input type='hidden' class='xendit_cc_hidden_input' name='xendit_cc_authentication_status' value='"+ ccAuthenticationSuccess +"'/>" );
             cc_xendit_form.form.submit();
             return;
-        },
-
-        shouldAuthenticate: function (){
-            return $("input[name='should_authenticate']").val() == 1;
         },
 
         canUseDynamic3DS: function (){

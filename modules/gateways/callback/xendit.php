@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../../includes/invoicefunctions.php';
 require_once __DIR__ . '/../xendit/autoload.php';
 
 use Xendit\Lib\Callback;
-use Xendit\lib\CreditCard;
+use Xendit\Lib\CreditCard;
 use Xendit\Lib\XenditRequest;
 
 $callback = new Callback();
@@ -20,18 +20,18 @@ $action = $postData['action'] ?? "";
 // Create/Update credit card
 if ($action == 'updatecc' || $action == "createcc") {
     /*
-     * Make sure the 3DS authentication status = 1
+     * Make sure the CC authentication status = 1
      * That mean the CC token is valid to create the charge
      */
-//    if(!isset($postData['xendit_3ds_authentication_status']) || $postData['xendit_3ds_authentication_status'] == 0){
-//        logTransaction($gatewayParams['paymentmethod'], $postData, "3DS authentication failed");
-//        $creditCard->renderJson(
-//            [
-//                'error' => true,
-//                'message' => '3DS authentication failed.',
-//            ]
-//        );
-//    }
+    if (!isset($postData['xendit_cc_authentication_status']) || $postData['xendit_cc_authentication_status'] == 0) {
+        logTransaction($gatewayParams['paymentmethod'], $postData, "CC authentication failed");
+        $creditCard->renderJson(
+            [
+                'error' => true,
+                'message' => 'CC authentication failed.',
+            ]
+        );
+    }
 
     /*
      * Make sure the credit card info has value
@@ -70,7 +70,7 @@ if ($action == 'updatecc' || $action == "createcc") {
         $creditCard->renderJson(
             [
                 'error' => true,
-                'message' => 'Invalid Hash',
+                'message' => 'Invalid.',
             ]
         );
     }

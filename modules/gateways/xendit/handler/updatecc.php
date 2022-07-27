@@ -28,7 +28,8 @@ $customReference = $_POST['custom_reference'] ?? '';
 $verificationHash = $_POST['verification_hash'] ?? '';
 $canUseDynamic3ds = $_POST['can_use_dynamic_3ds'] ?? 0;
 
-$comparisonHash = sha1(
+$comparisonHash = hash(
+    'sha512',
     implode('|', [
         $publicKey,
         $customerId,
@@ -39,7 +40,7 @@ $comparisonHash = sha1(
     ])
 );
 if ($verificationHash !== $comparisonHash) {
-    die('Invalid hash.');
+    die('Invalid.');
 }
 
 if ($action === 'payment') {
@@ -87,7 +88,7 @@ if ($action === 'payment') {
 </head>
 <body>
 
-<form method="post" id="frmUpdateCC" action="submitcc.php" style="margin:0 auto;width:80%;" autocomplete="on">
+<form method="post" id="frmUpdateCC" style="margin:0 auto;width:80%;" autocomplete="on">
     <input type="hidden" name="action" value="<?= $action ?>">
     <input type="hidden" name="amount" value="<?= $amount ?>">
     <input type="hidden" name="currency" value="<?= $currencyCode ?>">

@@ -10,10 +10,11 @@ require_once __DIR__ . '/../../includes/gatewayfunctions.php';
 require __DIR__ . '/xendit/autoload.php';
 
 // defines
-define('XENDIT_PAYMENT_GATEWAY_VERSION', '1.0.6');
+define('XENDIT_PAYMENT_GATEWAY_VERSION', '1.0.7');
 
 use WHMCS\Billing\Invoice;
 use Xendit\Lib\ActionBase;
+use Xendit\Lib\CreditCard;
 use Xendit\Lib\Link;
 use Xendit\Lib\Model\XenditTransaction;
 use Xendit\Lib\Recurring;
@@ -118,7 +119,7 @@ function xendit_capture($params)
     }
 
     // Generate payload
-    $cc = new \Xendit\Lib\CreditCard();
+    $cc = new CreditCard();
     $payload = $cc->generateCCPaymentRequest($params);
 
     try {
@@ -195,13 +196,14 @@ function xendit_remoteinput($params)
     $secretKey = $params['xenditTestMode'] == 'on' ? $params['xenditTestSecretKey'] : $params['xenditSecretKey'];
 
     $xenditRequest = new XenditRequest();
+    $creditCard = new CreditCard();
 
     // Card settings
     try {
         $cardSettings = $xenditRequest->getCardSettings();
         $canUseDynamic3ds = $cardSettings['can_use_dynamic_3ds'] ?? 0;
     } catch (\Exception $e) {
-        return (new ActionBase)->errorMessage($e->getMessage());
+        return $creditCard->errorMessage($e->getMessage());
     }
 
     // Client Parameters
@@ -228,7 +230,7 @@ function xendit_remoteinput($params)
         'return_url' => $systemUrl . 'modules/gateways/callback/xendit.php',
         'payment_method_url' => $systemUrl . 'index.php?rp=/account/paymentmethods',
         'can_use_dynamic_3ds' => $canUseDynamic3ds,
-        'verification_hash' => sha1(
+        'verification_hash' => $creditCard->generateHash(
             implode('|', [
                 $publicKey,
                 $clientId,
@@ -286,6 +288,7 @@ HTML;
     }
 
     $xenditRequest = new XenditRequest();
+    $creditCard = new CreditCard();
 
     // Gateway Configuration Parameters
     $publicKey = $xenditRequest->getPublicKey();
@@ -297,7 +300,7 @@ HTML;
         $cardSettings = $xenditRequest->getCardSettings();
         $canUseDynamic3ds = $cardSettings['can_use_dynamic_3ds'] ?? 0;
     } catch (\Exception $e) {
-        return (new ActionBase)->errorMessage($e->getMessage());
+        return $creditCard->errorMessage($e->getMessage());
     }
 
     // Client Parameters
@@ -327,7 +330,7 @@ HTML;
         'return_url' => $systemUrl . 'modules/gateways/callback/xendit.php',
         'payment_method_url' => $systemUrl . 'index.php?rp=/account/paymentmethods',
         'can_use_dynamic_3ds' => $canUseDynamic3ds,
-        'verification_hash' => sha1(
+        'verification_hash' => $creditCard->generateHash(
             implode('|', [
                 $publicKey,
                 $clientId,
