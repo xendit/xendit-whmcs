@@ -23,7 +23,7 @@ if ($action == 'updatecc' || $action == "createcc") {
      * Make sure the CC authentication status = 1
      * That mean the CC token is valid to create the charge
      */
-    if(!isset($postData['xendit_cc_authentication_status']) || $postData['xendit_cc_authentication_status'] == 0){
+    if (!isset($postData['xendit_cc_authentication_status']) || $postData['xendit_cc_authentication_status'] == 0) {
         logTransaction($gatewayParams['paymentmethod'], $postData, "CC authentication failed");
         $creditCard->renderJson(
             [
