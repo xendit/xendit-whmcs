@@ -125,8 +125,7 @@ class Link extends ActionBase
     protected function generateFormParam(array $params, string $invoiceUrl): string
     {
         if ($this->isRefererUrlFromCart()) {
-            header("Location: " . $invoiceUrl);
-            exit();
+            return $this->redirectUrl($invoiceUrl);
         }
 
         $postfields = array();
