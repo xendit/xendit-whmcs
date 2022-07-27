@@ -10,7 +10,7 @@ require_once __DIR__ . '/../../includes/gatewayfunctions.php';
 require __DIR__ . '/xendit/autoload.php';
 
 // defines
-define('XENDIT_PAYMENT_GATEWAY_VERSION', '1.0.6');
+define('XENDIT_PAYMENT_GATEWAY_VERSION', '1.0.7');
 
 use WHMCS\Billing\Invoice;
 use Xendit\Lib\ActionBase;
@@ -203,7 +203,7 @@ function xendit_remoteinput($params)
         $cardSettings = $xenditRequest->getCardSettings();
         $canUseDynamic3ds = $cardSettings['can_use_dynamic_3ds'] ?? 0;
     } catch (\Exception $e) {
-        return (new ActionBase)->errorMessage($e->getMessage());
+        return $creditCard->errorMessage($e->getMessage());
     }
 
     // Client Parameters
@@ -300,7 +300,7 @@ HTML;
         $cardSettings = $xenditRequest->getCardSettings();
         $canUseDynamic3ds = $cardSettings['can_use_dynamic_3ds'] ?? 0;
     } catch (\Exception $e) {
-        return (new ActionBase)->errorMessage($e->getMessage());
+        return $creditCard->errorMessage($e->getMessage());
     }
 
     // Client Parameters

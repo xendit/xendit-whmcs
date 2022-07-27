@@ -40,7 +40,7 @@ $comparisonHash = hash(
     ])
 );
 if ($verificationHash !== $comparisonHash) {
-    die('Invalid hash.');
+    die('Invalid.');
 }
 
 if ($action === 'payment') {
