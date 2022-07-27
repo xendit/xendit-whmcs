@@ -154,7 +154,7 @@ class CreditCard extends \Xendit\Lib\ActionBase
      */
     public function compareHash(string $verificationHash, array $params = [])
     {
-        $comparisonHash = sha1(
+        $comparisonHash = $this->generateHash(
             implode('|', [
                 $params["publicKey"],
                 $params["customerId"],
@@ -229,5 +229,14 @@ class CreditCard extends \Xendit\Lib\ActionBase
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
+    }
+
+    /**
+     * @param string $str
+     * @return false|string
+     */
+    public function generateHash(string $str)
+    {
+        return hash('sha512', $str);
     }
 }
