@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../../includes/invoicefunctions.php';
 require_once __DIR__ . '/../xendit/autoload.php';
 
 use Xendit\Lib\Callback;
-use Xendit\lib\CreditCard;
+use Xendit\Lib\CreditCard;
 use Xendit\Lib\XenditRequest;
 
 $callback = new Callback();

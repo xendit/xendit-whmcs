@@ -1,6 +1,6 @@
 <?php
 
-namespace Xendit\lib;
+namespace Xendit\Lib;
 
 class CreditCard extends \Xendit\Lib\ActionBase
 {
