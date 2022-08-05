@@ -17,6 +17,10 @@ class Link extends ActionBase
     {
         $items = array();
         foreach ($invoice->items()->get() as $item) {
+            if ($item->amount < 0) {
+                continue;
+            }
+
             $items[] = [
                 'quantity' => 1,
                 'name' => $item->description,
