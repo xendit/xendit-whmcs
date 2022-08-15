@@ -4,7 +4,7 @@ namespace Xendit\Tests\Lib;
 
 use PHPUnit\Framework\TestCase;
 
-class LinkTest extends TestCase
+class ActionBaseTest extends TestCase
 {
     /**
      * Test if xendit customer address object return empty if WHMCS customer address object empty
