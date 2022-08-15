@@ -34,12 +34,52 @@ class Link extends ActionBase
      * @param array $params
      * @return array
      */
-    protected function extractCustomer(array $params)
+    public function extractCustomer(array $params): array
     {
-        return [
-            'given_names' => $params['clientdetails']['firstname'] . ' ' . $params['clientdetails']['lastname'],
-            'mobile_number' => $params['clientdetails']['phonenumber']
+        $customerObject = [];
+
+        if(!empty($params['firstname']) || !empty($params['lastname'])){
+            $customerObject['given_names'] = trim(sprintf("%s %s", $params['firstname'], $params['lastname']));
+        }
+        if(!empty($params['phonenumber'])){
+            $customerObject['mobile_number'] = $params['phonenumber'];
+        }
+
+        $customerAddressObject = $this->extractCustomerAddress($params);
+        if(!empty($customerAddressObject)){
+            $customerObject['addresses'][] = $customerAddressObject;
+        }
+
+        return $customerObject;
+    }
+
+    /**
+     * extract customer address
+     *
+     * @param array $params
+     * @return array
+     */
+    public function extractCustomerAddress(array $params): array
+    {
+        $customerAddressObject = [];
+        if(empty($params))
+            return $customerAddressObject;
+
+        // Map Xendit address key with WHMCS address key
+        $customerAddressObject = [
+            'country' => $params['country'],
+            'street_line1' => $params['address1'],
+            'street_line2' => $params['address2'],
+            'city' => $params['city'],
+            'province_state' => $params['state'],
+            'postal_code' => $params['postcode']
         ];
+        foreach ($customerAddressObject as $key => $value){
+            if(empty($value)){
+                unset($customerAddressObject[$key]);
+            }
+        }
+        return $customerAddressObject;
     }
 
     /**
@@ -63,7 +103,7 @@ class Link extends ActionBase
             'success_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),
             'failure_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),
             'should_charge_multiple_use_token' => true,
-            'customer' => $this->extractCustomer($params)
+            'customer' => $this->extractCustomer($params['clientdetails'])
         ];
 
         // Only add the payment fee if it's > 0
