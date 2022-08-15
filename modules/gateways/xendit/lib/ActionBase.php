@@ -412,9 +412,18 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
     {
         $customerObject = [];
 
-        if (!empty($params['firstname']) || !empty($params['lastname'])) {
-            $customerObject['given_names'] = trim(sprintf("%s %s", $params['firstname'], $params['lastname']));
+        if (!empty($params['fullname'])) {
+            $customerObject['given_names'] = trim($params['fullname']);
+        } else {
+            if (!empty($params['firstname']) || !empty($params['lastname'])) {
+                $customerObject['given_names'] = trim(sprintf("%s %s", $params['firstname'], $params['lastname']));
+            }
         }
+
+        if (!empty($params['email'])) {
+            $customerObject['email'] = $params['email'];
+        }
+
         if (!empty($params['phonenumber'])) {
             $customerObject['mobile_number'] = $params['phonenumber'];
         }
@@ -427,7 +436,6 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
                 $customerObject['addresses'][] = $customerAddressObject;
             }
         }
-
         return $customerObject;
     }
 

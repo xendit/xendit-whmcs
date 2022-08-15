@@ -71,6 +71,8 @@ class ActionBaseTest extends TestCase
     {
         // WHMCS client details
         $mockCustomerDetails = [
+            'fullname' => '',
+            'email' => '',
             'firstname' => '',
             'lastname' => '',
             'phonenumber' => ''
@@ -92,9 +94,11 @@ class ActionBaseTest extends TestCase
     {
         // WHMCS client details
         $mockCustomerDetails = [
+            'fullname' => 'test test',
             'firstname' => 'test',
             'lastname' => 'test',
-            'phonenumber' => '123456789'
+            'phonenumber' => '123456789',
+            'email' => 'test@example.com'
         ];
 
         $link = new \Xendit\Lib\Link();
@@ -104,7 +108,8 @@ class ActionBaseTest extends TestCase
         $this->assertEquals(
             [
                 'given_names' => 'test test',
-                'mobile_number' => '123456789'
+                'mobile_number' => '123456789',
+                'email' => 'test@example.com'
             ],
             $customerObject
         );

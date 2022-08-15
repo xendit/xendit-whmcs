@@ -92,9 +92,7 @@ class CreditCard extends \Xendit\Lib\ActionBase
             "external_id" => $this->generateExternalId($params["invoiceid"], true),
             "store_name" => $params["companyname"],
             "items" => $this->extractItems($invoice),
-            "customer" => [
-                "billing_details" => $this->extractCustomer($params['clientdetails'], true)
-            ],
+            "billing_details" => $this->extractCustomer($params['clientdetails'], true),
             "is_recurring" => true,
             "should_charge_multiple_use_token" => true
         ];
