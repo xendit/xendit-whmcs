@@ -417,7 +417,7 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
             "mobile_number" => $params['phonenumber'],
         ];
 
-        $customerObject = array_filter($customerObject, function ($value){
+        $customerObject = array_filter($customerObject, function ($value) {
             return !empty($value);
         }, ARRAY_FILTER_USE_BOTH);
 
@@ -455,7 +455,7 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
             'postal_code' => $params['postcode']
         ];
 
-        return array_filter($customerAddressObject, function($value){
+        return array_filter($customerAddressObject, function ($value) {
             return !empty($value);
         }, ARRAY_FILTER_USE_BOTH);
     }
