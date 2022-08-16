@@ -102,7 +102,7 @@ class ActionBaseTest extends TestCase
 
         $link = new \Xendit\Lib\Link();
         $customerObject = $link->extractCustomer($mockCustomerDetails);
-        
+
         $this->assertIsArray($customerObject, 'customerObject should be array');
         $this->assertEquals(
             [
