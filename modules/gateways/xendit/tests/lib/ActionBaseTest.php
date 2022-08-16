@@ -94,7 +94,6 @@ class ActionBaseTest extends TestCase
     {
         // WHMCS client details
         $mockCustomerDetails = [
-            'fullname' => 'test test',
             'firstname' => 'test',
             'lastname' => 'test',
             'phonenumber' => '123456789',
@@ -103,11 +102,12 @@ class ActionBaseTest extends TestCase
 
         $link = new \Xendit\Lib\Link();
         $customerObject = $link->extractCustomer($mockCustomerDetails);
-
+        
         $this->assertIsArray($customerObject, 'customerObject should be array');
         $this->assertEquals(
             [
-                'given_names' => 'test test',
+                'given_names' => 'test',
+                'surname' => 'test',
                 'mobile_number' => '123456789',
                 'email' => 'test@example.com'
             ],

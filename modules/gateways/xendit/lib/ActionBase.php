@@ -410,23 +410,16 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
      */
     public function extractCustomer(array $params, bool $isCreditCard = false): array
     {
-        $customerObject = [];
+        $customerObject = [
+            "given_names" => $params['firstname'],
+            "surname" => $params['lastname'],
+            "email" => $params['email'],
+            "mobile_number" => $params['phonenumber'],
+        ];
 
-        if (!empty($params['fullname'])) {
-            $customerObject['given_names'] = trim($params['fullname']);
-        } else {
-            if (!empty($params['firstname']) || !empty($params['lastname'])) {
-                $customerObject['given_names'] = trim(sprintf("%s %s", $params['firstname'], $params['lastname']));
-            }
-        }
-
-        if (!empty($params['email'])) {
-            $customerObject['email'] = $params['email'];
-        }
-
-        if (!empty($params['phonenumber'])) {
-            $customerObject['mobile_number'] = $params['phonenumber'];
-        }
+        $customerObject = array_filter($customerObject, function ($value){
+            return !empty($value);
+        }, ARRAY_FILTER_USE_BOTH);
 
         $customerAddressObject = $this->extractCustomerAddress($params);
         if (!empty($customerAddressObject)) {
@@ -461,11 +454,9 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
             'province_state' => $params['state'],
             'postal_code' => $params['postcode']
         ];
-        foreach ($customerAddressObject as $key => $value) {
-            if (empty($value)) {
-                unset($customerAddressObject[$key]);
-            }
-        }
-        return $customerAddressObject;
+
+        return array_filter($customerAddressObject, function($value){
+            return !empty($value);
+        }, ARRAY_FILTER_USE_BOTH);
     }
 }
