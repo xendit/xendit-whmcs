@@ -10,39 +10,6 @@ class Link extends ActionBase
     protected $callbackUrl = 'modules/gateways/callback/xendit.php';
 
     /**
-     * @param \WHMCS\Billing\Invoice $invoice
-     * @return array
-     */
-    protected function extractItems(\WHMCS\Billing\Invoice $invoice): array
-    {
-        $items = array();
-        foreach ($invoice->items()->get() as $item) {
-            if ($item->amount < 0) {
-                continue;
-            }
-
-            $items[] = [
-                'quantity' => 1,
-                'name' => $item->description,
-                'price' => (float)$item->amount,
-            ];
-        }
-        return $items;
-    }
-
-    /**
-     * @param array $params
-     * @return array
-     */
-    protected function extractCustomer(array $params)
-    {
-        return [
-            'given_names' => $params['clientdetails']['firstname'] . ' ' . $params['clientdetails']['lastname'],
-            'mobile_number' => $params['clientdetails']['phonenumber']
-        ];
-    }
-
-    /**
      * @param array $params
      * @param bool $retry
      * @return array
@@ -63,7 +30,7 @@ class Link extends ActionBase
             'success_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),
             'failure_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),
             'should_charge_multiple_use_token' => true,
-            'customer' => $this->extractCustomer($params)
+            'customer' => $this->extractCustomer($params['clientdetails'])
         ];
 
         // Only add the payment fee if it's > 0

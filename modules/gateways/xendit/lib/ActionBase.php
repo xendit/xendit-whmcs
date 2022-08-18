@@ -381,4 +381,77 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
         $this->sendHeader("Location", $url);
         exit();
     }
+
+    /**
+     * @param \WHMCS\Billing\Invoice $invoice
+     * @return array
+     */
+    public function extractItems(\WHMCS\Billing\Invoice $invoice): array
+    {
+        $items = array();
+        foreach ($invoice->items()->get() as $item) {
+            if ($item->amount < 0) {
+                continue;
+            }
+
+            $items[] = [
+                'quantity' => 1,
+                'name' => $item->description,
+                'price' => (float)$item->amount,
+            ];
+        }
+        return $items;
+    }
+
+    /**
+     * @param array $params
+     * @param bool $isCreditCard
+     * @return array
+     */
+    public function extractCustomer(array $params, bool $isCreditCard = false): array
+    {
+        $customerObject = [
+            "given_names" => $params['firstname'],
+            "surname" => $params['lastname'],
+            "email" => $params['email'],
+            "mobile_number" => $params['phonenumber'],
+        ];
+        $customerObject = array_filter($customerObject);
+
+        $customerAddressObject = $this->extractCustomerAddress($params);
+        if (!empty($customerAddressObject)) {
+            if ($isCreditCard) {
+                $customerObject['address'] = $customerAddressObject;
+            } else {
+                $customerObject['addresses'][] = $customerAddressObject;
+            }
+        }
+        return $customerObject;
+    }
+
+    /**
+     * extract customer address
+     *
+     * @param array $params
+     * @return array
+     */
+    public function extractCustomerAddress(array $params): array
+    {
+        $customerAddressObject = [];
+        if (empty($params)) {
+            return $customerAddressObject;
+        }
+
+        // Map Xendit address key with WHMCS address key
+        $customerAddressObject = [
+            'country' => $params['country'],
+            'street_line1' => $params['address1'],
+            'street_line2' => $params['address2'],
+            'city' => $params['city'],
+            'province_state' => $params['state'],
+            'postal_code' => $params['postcode']
+        ];
+
+        return array_filter($customerAddressObject);
+    }
 }
