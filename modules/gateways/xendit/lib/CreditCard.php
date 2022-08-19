@@ -85,6 +85,7 @@ class CreditCard extends \Xendit\Lib\ActionBase
             throw new \Exception("Invoice does not exist");
         }
 
+        $billingDetailObject = $this->extractCustomer($params['clientdetails'], true);
         $payload = [
             "amount" => $this->roundUpTotal($params["amount"]),
             "currency" => $params["currency"],
@@ -92,11 +93,13 @@ class CreditCard extends \Xendit\Lib\ActionBase
             "external_id" => $this->generateExternalId($params["invoiceid"], true),
             "store_name" => $params["companyname"],
             "items" => $this->extractItems($invoice),
-            "billing_details" => $this->extractCustomer($params['clientdetails'], true),
             "is_recurring" => true,
             "should_charge_multiple_use_token" => true
         ];
 
+        if(!empty($billingDetailObject)){
+            $payload['billing_details'] = $billingDetailObject;
+        }
         if (!empty($auth_id)) {
             $payload["authentication_id"] = $auth_id;
         }

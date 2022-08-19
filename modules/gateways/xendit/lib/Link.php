@@ -17,7 +17,7 @@ class Link extends ActionBase
     protected function generateInvoicePayload(array $params, bool $retry = false): array
     {
         $invoice = $this->getInvoice($params["invoiceid"]);
-
+        $customerObject = $this->extractCustomer($params['clientdetails']);
         $payload = [
             'external_id' => $this->generateExternalId($params["invoiceid"], $retry),
             'payer_email' => $params['clientdetails']['email'],
@@ -29,9 +29,12 @@ class Link extends ActionBase
             'platform_callback_url' => $params["systemurl"] . $this->callbackUrl,
             'success_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),
             'failure_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),
-            'should_charge_multiple_use_token' => true,
-            'customer' => $this->extractCustomer($params['clientdetails'])
+            'should_charge_multiple_use_token' => true
         ];
+
+        if(!empty($customerObject)){
+            $payload['customer'] = $customerObject;
+        }
 
         // Only add the payment fee if it's > 0
         if ($params['paymentfee'] > 0) {
