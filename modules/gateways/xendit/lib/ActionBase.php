@@ -448,10 +448,9 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
             'street_line1' => $params['address1'],
             'street_line2' => $params['address2'],
             'city' => $params['city'],
-            'province_state' => $params['state'],
+            'state' => $params['state'],
             'postal_code' => $params['postcode']
         ];
-
         return array_filter($customerAddressObject);
     }
 }
