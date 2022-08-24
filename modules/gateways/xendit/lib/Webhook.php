@@ -11,7 +11,7 @@ class Webhook extends ActionBase
      */
     public function getInvoiceIdFromExternalId(string $external_id)
     {
-        $externalArray = array_map("trim", explode("-", $external_id));
+        $externalArray = array_map('trim', explode('-', $external_id));
         return end($externalArray);
     }
 
@@ -42,7 +42,7 @@ class Webhook extends ActionBase
 
             $transactionId = $xenditInvoiceData['id'];
             $paymentAmount = $this->extractPaidAmount($xenditInvoiceData['paid_amount'], $invoice->total);
-            $paymentFee = $xenditInvoiceData['fees'][0]["value"];
+            $paymentFee = $xenditInvoiceData['fees'][0]['value'];
             $transactionStatus = 'Success';
 
             // Save credit card token
@@ -51,12 +51,12 @@ class Webhook extends ActionBase
                 $cardExpired = $this->xenditRequest->getCardTokenInfo($xenditInvoiceData['credit_card_token']);
 
                 if (!empty($cardInfo) && !empty($cardExpired)) {
-                    $lastDigit = substr($cardInfo["masked_card_number"], -4);
+                    $lastDigit = substr($cardInfo['masked_card_number'], -4);
                     invoiceSaveRemoteCard(
                         $invoiceId,
                         $lastDigit,
-                        $cardInfo["card_brand"],
-                        sprintf("%s/%s", $cardExpired["card_expiration_month"], $cardExpired["card_expiration_year"]),
+                        $cardInfo['card_brand'],
+                        sprintf('%s/%s', $cardExpired['card_expiration_month'], $cardExpired['card_expiration_year']),
                         $xenditInvoiceData['credit_card_token']
                     );
                 }
@@ -79,8 +79,8 @@ class Webhook extends ActionBase
                 $this->updateTransactions(
                     $transactions,
                     [
-                        "status" => XenditTransaction::STATUS_PAID,
-                        "payment_method" => $xenditInvoiceData["payment_method"]
+                        'status' => XenditTransaction::STATUS_PAID,
+                        'payment_method' => $xenditInvoiceData['payment_method']
                     ]
                 );
             }

@@ -234,7 +234,7 @@ class PaymentLink extends ActionBase
                 return $this->updateInvoiceStatus($params, $xenditInvoice, $transactions);
             }
 
-            // If Xendit invoice not exist then create a new Xendit invoice
+            // If Xendit invoice does not exist, create a new Xendit invoice
             $xenditInvoice = $this->createXenditInvoice($params, $transactions);
             return $this->generateFormParam($params, $xenditInvoice['invoice_url']);
         } catch (\Exception $e) {
