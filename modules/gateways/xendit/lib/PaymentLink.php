@@ -4,7 +4,7 @@ namespace Xendit\Lib;
 
 use Xendit\Lib\Model\XenditTransaction;
 
-class Link extends ActionBase
+class PaymentLink extends ActionBase
 {
     /** @var string $callbackUrl */
     protected $callbackUrl = 'modules/gateways/callback/xendit.php';
@@ -32,7 +32,7 @@ class Link extends ActionBase
             'should_charge_multiple_use_token' => true
         ];
 
-        if(!empty($customerObject)){
+        if (!empty($customerObject)) {
             $payload['customer'] = $customerObject;
         }
 
@@ -138,6 +138,69 @@ class Link extends ActionBase
 
     /**
      * @param array $params
+     * @param $transactions
+     * @param bool $isForced
+     * @return false|string
+     * @throws \Exception
+     */
+    protected function createXenditInvoice(array $params, $transactions, bool $isForced = false)
+    {
+        try {
+            $payload = $this->generateInvoicePayload($params, $isForced);
+            $xenditInvoice = $this->xenditRequest->createInvoice($payload);
+            $this->updateTransactions(
+                $transactions,
+                [
+                    'transactionid' => $xenditInvoice["id"],
+                    'status' => XenditTransaction::STATUS_PENDING,
+                    'external_id' => $payload["external_id"]
+                ]
+            );
+            return $xenditInvoice;
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
+    }
+
+    /**
+     * @param array $params
+     * @param array $xenditInvoice
+     * @param $transactions
+     * @return string|null
+     * @throws \Exception
+     */
+    protected function updateInvoiceStatus(array $params, array $xenditInvoice, $transactions)
+    {
+        if (empty($xenditInvoice)) {
+            throw new \Exception('Xendit invoice not found.');
+        }
+
+        try {
+            $xenditInvoiceStatus = $xenditInvoice['status'] ?? '';
+            switch ($xenditInvoiceStatus) {
+                case 'PAID':
+                case 'SETTLED':
+                    $webhook = new \Xendit\Lib\Webhook();
+                    $confirmed = $webhook->confirmInvoice($params['invoiceid'], $xenditInvoice);
+                    if (!$confirmed) {
+                        throw new \Exception('Cannot update invoice status.');
+                    }
+                    return $this->redirectUrl($xenditInvoice['success_redirect_url']);
+
+                case 'EXPIRED':
+                    $this->updateTransactions($transactions, ['status' => XenditTransaction::STATUS_EXPIRED]);
+                    return $this->generatePaymentLink($params, true);
+
+                default:
+                    return $this->generateFormParam($params, $xenditInvoice['invoice_url']);
+            }
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
+    }
+
+    /**
+     * @param array $params
      * @param bool $force
      * @return string
      * @throws \Exception
@@ -149,24 +212,13 @@ class Link extends ActionBase
                 return false;
             }
 
-            // Get transaction
+            // Get transactions by WHMCS invoice
             $transactions = $this->getTransactionFromInvoiceId($params["invoiceid"]);
 
-            // If force create new invoice
+            // Create a new Xendit invoice in case the previous invoice is EXPIRED
             if ($force) {
-                $payload = $this->generateInvoicePayload($params, true);
-                $createInvoice = $this->xenditRequest->createInvoice($payload);
-                $url = $createInvoice['invoice_url'];
-
-                $this->updateTransactions(
-                    $transactions,
-                    [
-                        'transactionid' => $createInvoice["id"],
-                        'status' => XenditTransaction::STATUS_PENDING,
-                        'external_id' => $payload["external_id"]
-                    ]
-                );
-                return $this->generateFormParam($params, $url);
+                $xenditInvoice = $this->createXenditInvoice($params, $transactions, true);
+                return $this->generateFormParam($params, $xenditInvoice['invoice_url']);
             }
 
             // Get Xendit Invoice by transaction (Xendit invoice_id)
@@ -175,28 +227,16 @@ class Link extends ActionBase
                 $xenditInvoice = $this->xenditRequest->getInvoiceById($transactions[0]->transactionid);
             }
 
-            // Check xendit invoice status
+            /*
+             * Check if Xendit invoice exists then update WHMCS invoice status
+             */
             if (!empty($xenditInvoice)) {
-                if ($xenditInvoice['status'] == "EXPIRED") {
-                    $this->updateTransactions($transactions, ['status' => XenditTransaction::STATUS_EXPIRED]);
-                    return $this->generatePaymentLink($params, true);
-                } else {
-                    $url = $xenditInvoice['invoice_url'];
-                }
-            } else {
-                $createInvoice = $this->xenditRequest->createInvoice(
-                    $this->generateInvoicePayload($params)
-                );
-                $url = $createInvoice['invoice_url'];
-                $this->updateTransactions(
-                    $transactions,
-                    [
-                        'transactionid' => $createInvoice["id"],
-                        'status' => XenditTransaction::STATUS_PENDING
-                    ]
-                );
+                return $this->updateInvoiceStatus($params, $xenditInvoice, $transactions);
             }
-            return $this->generateFormParam($params, $url);
+
+            // If Xendit invoice not exist then create a new Xendit invoice
+            $xenditInvoice = $this->createXenditInvoice($params, $transactions);
+            return $this->generateFormParam($params, $xenditInvoice['invoice_url']);
         } catch (\Exception $e) {
             /*
              * If currency is error

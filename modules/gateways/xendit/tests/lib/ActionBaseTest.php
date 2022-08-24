@@ -23,7 +23,7 @@ class ActionBaseTest extends TestCase
             'postcode' => ''
         ];
 
-        $link = new \Xendit\Lib\Link();
+        $link = new \Xendit\Lib\PaymentLink();
         $customerAddressObject = $link->extractCustomerAddress($mockCustomerDetails);
         $this->assertIsArray($customerAddressObject, 'customerAddressObject should be array');
         $this->assertEquals([], $customerAddressObject);
@@ -46,7 +46,7 @@ class ActionBaseTest extends TestCase
             'postcode' => 'test postcode',
         ];
 
-        $link = new \Xendit\Lib\Link();
+        $link = new \Xendit\Lib\PaymentLink();
         $customerAddressObject = $link->extractCustomerAddress($mockCustomerDetails);
 
         $this->assertIsArray($customerAddressObject, 'customerAddressObject should be array');
@@ -55,7 +55,7 @@ class ActionBaseTest extends TestCase
                 'country' => 'ID',
                 'street_line1' => 'test address1',
                 'city' => 'test city',
-                'province_state' => 'test state',
+                'state' => 'test state',
                 'postal_code' => 'test postcode'
             ],
             $customerAddressObject
@@ -78,7 +78,7 @@ class ActionBaseTest extends TestCase
             'phonenumber' => ''
         ];
 
-        $link = new \Xendit\Lib\Link();
+        $link = new \Xendit\Lib\PaymentLink();
         $customerObject = $link->extractCustomer($mockCustomerDetails);
 
         $this->assertIsArray($customerObject, 'customerObject should be array');
@@ -100,7 +100,7 @@ class ActionBaseTest extends TestCase
             'email' => 'test@example.com'
         ];
 
-        $link = new \Xendit\Lib\Link();
+        $link = new \Xendit\Lib\PaymentLink();
         $customerObject = $link->extractCustomer($mockCustomerDetails);
 
         $this->assertIsArray($customerObject, 'customerObject should be array');

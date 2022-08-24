@@ -10,12 +10,12 @@ require_once __DIR__ . '/../../includes/gatewayfunctions.php';
 require __DIR__ . '/xendit/autoload.php';
 
 // defines
-define('XENDIT_PAYMENT_GATEWAY_VERSION', '1.0.9');
+const XENDIT_PAYMENT_GATEWAY_VERSION = '1.1.0';
 
 use WHMCS\Billing\Invoice;
 use Xendit\Lib\ActionBase;
 use Xendit\Lib\CreditCard;
-use Xendit\Lib\Link;
+use Xendit\Lib\PaymentLink;
 use Xendit\Lib\Model\XenditTransaction;
 use Xendit\Lib\Recurring;
 use Xendit\Lib\XenditRequest;
@@ -73,11 +73,11 @@ function xendit_deactivate()
  */
 function xendit_link($params)
 {
-    $link = new Link();
+    $paymentLink = new PaymentLink();
     try {
-        return $link->generatePaymentLink($params);
+        return $paymentLink->generatePaymentLink($params);
     } catch (\Exception $e) {
-        return $link->errorMessage($e->getMessage());
+        return $paymentLink->errorMessage($e->getMessage());
     }
 }
 

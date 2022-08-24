@@ -97,7 +97,7 @@ class CreditCard extends \Xendit\Lib\ActionBase
             "should_charge_multiple_use_token" => true
         ];
 
-        if(!empty($billingDetailObject)){
+        if (!empty($billingDetailObject)) {
             $payload['billing_details'] = $billingDetailObject;
         }
         if (!empty($auth_id)) {

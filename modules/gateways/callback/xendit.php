@@ -4,11 +4,11 @@ require_once __DIR__ . '/../../../includes/gatewayfunctions.php';
 require_once __DIR__ . '/../../../includes/invoicefunctions.php';
 require_once __DIR__ . '/../xendit/autoload.php';
 
-use Xendit\Lib\Callback;
+use Xendit\Lib\Webhook;
 use Xendit\Lib\CreditCard;
 use Xendit\Lib\XenditRequest;
 
-$callback = new Callback();
+$webhook = new Webhook();
 $creditCard = new CreditCard();
 $xenditRequest = new XenditRequest();
 
@@ -106,11 +106,11 @@ if ($action == 'updatecc' || $action == "createcc") {
         );
     }
 } else {
-    // use for callback
+    // use for webhook
     $arrRequestInput = json_decode(file_get_contents("php://input"), true);
     if (!empty($arrRequestInput) && isset($arrRequestInput['external_id']) && !empty($arrRequestInput['external_id'])) {
-        $invoiceId = $callback->getInvoiceIdFromExternalId($arrRequestInput['external_id']);
-        $transactions = $callback->getTransactionFromInvoiceId($invoiceId);
+        $invoiceId = $webhook->getInvoiceIdFromExternalId($arrRequestInput['external_id']);
+        $transactions = $webhook->getTransactionFromInvoiceId($invoiceId);
 
         try {
             // Get invoice from Xendit
@@ -118,13 +118,13 @@ if ($action == 'updatecc' || $action == "createcc") {
             if (isset($arrRequestInput['credit_card_token'])) {
                 $xenditInvoice['credit_card_token'] = $arrRequestInput['credit_card_token'];
             }
-            $result = $callback->confirmInvoice(
+            $result = $webhook->confirmInvoice(
                 $invoiceId,
                 $xenditInvoice,
                 $xenditInvoice["status"] == "PAID" || $xenditInvoice["status"] == "SETTLED"
             );
             if ($result) {
-                $callback->updateTransactions($transactions);
+                $webhook->updateTransactions($transactions);
                 echo 'Success';
                 exit;
             }
