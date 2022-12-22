@@ -10,7 +10,7 @@ require_once __DIR__ . '/../../includes/gatewayfunctions.php';
 require __DIR__ . '/xendit/autoload.php';
 
 // Module version
-const XENDIT_PAYMENT_GATEWAY_VERSION = '1.1.0';
+const XENDIT_PAYMENT_GATEWAY_VERSION = '1.2.0';
 
 use WHMCS\Billing\Invoice;
 use Xendit\Lib\ActionBase;
@@ -74,9 +74,13 @@ function xendit_deactivate()
 function xendit_link($params)
 {
     $paymentLink = new PaymentLink();
+    $xenditRequest = new XenditRequest();
     try {
         return $paymentLink->generatePaymentLink($params);
     } catch (\Exception $e) {
+        $metricPayload = $xenditRequest->constructMetricPayload('whmcs_checkout', 'error', $payment_method);
+        $xenditRequest->trackMetricCount($metricPayload);
+
         return $paymentLink->errorMessage($e->getMessage());
     }
 }
@@ -426,6 +430,9 @@ function xendit_refund($params)
     try {
         $refundResponse = $xenditRequest->createRefund($chargeId, $body);
     } catch (Exception $e) {
+        $metricPayload = $xenditRequest->constructMetricPayload('whmcs_refund', 'error', $payment_method);
+        $xenditRequest->trackMetricCount($metricPayload);
+
         return array(
             'status' => 'declined',
             'rawdata' => $e->getMessage(),

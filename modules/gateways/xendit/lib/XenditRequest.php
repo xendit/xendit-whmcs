@@ -263,4 +263,42 @@ class XenditRequest
             throw new \Exception($e->getMessage());
         }
     }
+
+    /**
+     * @param array $param
+     * @return true|false|string
+     * @throws \Exception
+     */
+    public function trackMetricCount(array $payload = [])
+    {
+        try {
+            $response = $this->request(
+                '/log/metrics/count',
+                [
+                    'headers' => $this->defaultHeader(),
+                    'body' => json_encode($payload)
+                ],
+                "POST"
+            );
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    function constructMetricPayload($name, $type, $error_code = '')
+    {
+        $metrics = array(
+            'name'              => $name,
+            'additional_tags'   => array(
+                'type' => $type
+            )
+        );
+
+        if ($error_code) {
+            $metrics['additional_tags']['error_code'] = $error_code;
+        }
+
+        return $metrics;
+    }
 }
