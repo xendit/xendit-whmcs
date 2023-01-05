@@ -4,7 +4,7 @@ namespace Xendit\Lib;
 
 class XenditRequest
 {
-    protected $tpi_server_domain = "https://tpi-service-live.us-west-2.stg.tidnex.dev";
+    protected $tpi_server_domain = "https://tpi.xendit.co";
 
     /**
      * @return mixed
