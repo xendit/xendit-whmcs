@@ -265,14 +265,13 @@ class XenditRequest
     }
 
     /**
-     * @param array $param
-     * @return true|false|string
-     * @throws \Exception
+     * @param array $payload
+     * @return bool
      */
     public function trackMetricCount(array $payload = [])
     {
         try {
-            $response = $this->request(
+            $this->request(
                 '/log/metrics/count',
                 [
                     'headers' => $this->defaultHeader(),
@@ -287,16 +286,24 @@ class XenditRequest
     }
 
     /**
-     * @param $name
-     * @param $type
+     * @param string $name
+     * @param array $additional_tags
+     * @param string $error_code
      * @return array
      */
-    public function constructMetricPayload($name, $type): array
-    {
+    public function constructMetricPayload(
+        string $name,
+        array $additional_tags,
+        string $error_code = ''
+    ): array {
         return array(
             'name'              => $name,
-            'additional_tags'   => array(
-                'type' => $type
+            'additional_tags'   => array_merge(
+                array(
+                    'version' => XENDIT_PAYMENT_GATEWAY_VERSION,
+                    'is_live' => $this->isTestMode()
+                ),
+                $additional_tags
             )
         );
     }
