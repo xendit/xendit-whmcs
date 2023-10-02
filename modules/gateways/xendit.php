@@ -70,6 +70,7 @@ function xendit_deactivate()
 /**
  * @param $params
  * @return string
+ * @throws Exception
  */
 function xendit_link($params)
 {
@@ -78,7 +79,7 @@ function xendit_link($params)
     try {
         return $paymentLink->generatePaymentLink($params);
     } catch (\Exception $e) {
-        $metricPayload = $xenditRequest->constructMetricPayload('whmcs_checkout', 'error', $payment_method);
+        $metricPayload = $xenditRequest->constructMetricPayload('whmcs_checkout', 'error');
         $xenditRequest->trackMetricCount($metricPayload);
 
         return $paymentLink->errorMessage($e->getMessage());
@@ -430,7 +431,7 @@ function xendit_refund($params)
     try {
         $refundResponse = $xenditRequest->createRefund($chargeId, $body);
     } catch (Exception $e) {
-        $metricPayload = $xenditRequest->constructMetricPayload('whmcs_refund', 'error', $payment_method);
+        $metricPayload = $xenditRequest->constructMetricPayload('whmcs_refund', 'error');
         $xenditRequest->trackMetricCount($metricPayload);
 
         return array(

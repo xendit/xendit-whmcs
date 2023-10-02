@@ -286,19 +286,18 @@ class XenditRequest
         }
     }
 
-    function constructMetricPayload($name, $type, $error_code = '')
+    /**
+     * @param $name
+     * @param $type
+     * @return array
+     */
+    public function constructMetricPayload($name, $type): array
     {
-        $metrics = array(
+        return array(
             'name'              => $name,
             'additional_tags'   => array(
                 'type' => $type
             )
         );
-
-        if ($error_code) {
-            $metrics['additional_tags']['error_code'] = $error_code;
-        }
-
-        return $metrics;
     }
 }
