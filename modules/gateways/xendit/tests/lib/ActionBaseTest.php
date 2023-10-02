@@ -96,7 +96,7 @@ class ActionBaseTest extends TestCase
         $mockCustomerDetails = [
             'firstname' => 'test',
             'lastname' => 'test',
-            'phonenumber' => '123456789',
+            'telephoneNumber' => '+62.123456789',
             'email' => 'test@example.com'
         ];
 
@@ -108,7 +108,7 @@ class ActionBaseTest extends TestCase
             [
                 'given_names' => 'test',
                 'surname' => 'test',
-                'mobile_number' => '123456789',
+                'mobile_number' => '+62123456789',
                 'email' => 'test@example.com'
             ],
             $customerObject
