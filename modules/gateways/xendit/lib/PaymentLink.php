@@ -18,7 +18,6 @@ class PaymentLink extends ActionBase
         $invoice = $this->getInvoice($params["invoiceid"]);
         $customerObject = $this->extractCustomer($params['clientdetails']);
         $whmsInvoiceUrl = $this->invoiceUrl($params['invoiceid'], $params['systemurl']);
-        $orderSuccessUrl = $this->isRefererUrlFromCart() ? $this->orderSuccessUrl($params['systemurl']) : $whmsInvoiceUrl;
 
         $payload = [
             'external_id' => $this->generateExternalId($params["invoiceid"], $retry),
@@ -29,7 +28,7 @@ class PaymentLink extends ActionBase
             'amount' => $this->roundUpTotal($params['amount'] + (float)$params['paymentfee']),
             'client_type' => 'INTEGRATION',
             'platform_callback_url' => $params["systemurl"] . $this->callbackUrl,
-            'success_redirect_url' => $orderSuccessUrl,
+            'success_redirect_url' => $whmsInvoiceUrl,
             'failure_redirect_url' => $whmsInvoiceUrl,
             'should_charge_multiple_use_token' => true
         ];
@@ -54,15 +53,6 @@ class PaymentLink extends ActionBase
     protected function invoiceUrl($invoiceId, string $systemurl): string
     {
         return $systemurl . 'viewinvoice.php?id=' . $invoiceId;
-    }
-
-    /**
-     * @param string $systemurl
-     * @return string
-     */
-    protected function orderSuccessUrl(string $systemurl): string
-    {
-        return $systemurl . 'cart.php?a=complete';
     }
 
     /**
