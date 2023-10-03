@@ -1,5 +1,4 @@
 <?php
-
 namespace Xendit\Lib;
 
 use Xendit\Lib\Model\XenditTransaction;
@@ -18,6 +17,9 @@ class PaymentLink extends ActionBase
     {
         $invoice = $this->getInvoice($params["invoiceid"]);
         $customerObject = $this->extractCustomer($params['clientdetails']);
+        $whmsInvoiceUrl = $this->invoiceUrl($params['invoiceid'], $params['systemurl']);
+        $orderSuccessUrl = $this->isRefererUrlFromCart() ? $this->orderSuccessUrl($params['systemurl']) : $whmsInvoiceUrl;
+
         $payload = [
             'external_id' => $this->generateExternalId($params["invoiceid"], $retry),
             'payer_email' => $params['clientdetails']['email'],
@@ -27,8 +29,8 @@ class PaymentLink extends ActionBase
             'amount' => $this->roundUpTotal($params['amount'] + (float)$params['paymentfee']),
             'client_type' => 'INTEGRATION',
             'platform_callback_url' => $params["systemurl"] . $this->callbackUrl,
-            'success_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),
-            'failure_redirect_url' => $this->invoiceUrl($params['invoiceid'], $params['systemurl']),
+            'success_redirect_url' => $orderSuccessUrl,
+            'failure_redirect_url' => $whmsInvoiceUrl,
             'should_charge_multiple_use_token' => true
         ];
 
@@ -55,19 +57,27 @@ class PaymentLink extends ActionBase
     }
 
     /**
+     * @param string $systemurl
+     * @return string
+     */
+    protected function orderSuccessUrl(string $systemurl): string
+    {
+        return $systemurl . 'cart.php?a=complete';
+    }
+
+    /**
      * Check if Referer URL from card
      *
      * @return bool
      */
     protected function isRefererUrlFromCart(): bool
     {
-        if (isset($_SERVER["HTTP_REFERER"]) && $this->isViewInvoicePage()) {
-            $uri = parse_url($_SERVER['HTTP_REFERER']);
-            if (in_array("cart.php", explode("/", $uri["path"]))) {
-                return true;
-            }
+        if(!$this->isViewInvoicePage() || empty($_SERVER) || empty($_SERVER["HTTP_REFERER"])){
+            return false;
         }
-        return false;
+
+        $uri = parse_url($_SERVER['HTTP_REFERER']);
+        return in_array("cart.php", explode("/", $uri["path"]));
     }
 
     /**
@@ -75,7 +85,11 @@ class PaymentLink extends ActionBase
      */
     protected function isViewInvoicePage(): bool
     {
-        return in_array("viewinvoice.php", explode("/", $_SERVER["SCRIPT_NAME"] ?? ""));
+        if(empty($_SERVER) || empty($_SERVER["SCRIPT_NAME"])){
+            return false;
+        }
+
+        return in_array("viewinvoice.php", explode("/", $_SERVER["SCRIPT_NAME"]));
     }
 
     /**
