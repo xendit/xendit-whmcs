@@ -296,7 +296,7 @@ class XenditRequest
         array $additional_tags,
         string $error_code = ''
     ): array {
-        $metrics = array(
+        return array(
             'name'              => $name,
             'additional_tags'   => array_merge(
                 array(
@@ -306,11 +306,5 @@ class XenditRequest
                 $additional_tags
             )
         );
-
-        if ($error_code) {
-            $metrics['additional_tags']['error_code'] = $error_code;
-        }
-
-        return $metrics;
     }
 }

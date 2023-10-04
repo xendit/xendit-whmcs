@@ -324,7 +324,7 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
             "given_names" => $params['firstname'],
             "surname" => $params['lastname'],
             "email" => $params['email'],
-            "mobile_number" => $params['phonenumber'],
+            "mobile_number" => str_replace(['.', ' '], '', $params['telephoneNumber'])
         ];
         $customerObject = array_filter($customerObject);
 
