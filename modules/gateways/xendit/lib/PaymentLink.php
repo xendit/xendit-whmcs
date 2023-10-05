@@ -62,7 +62,7 @@ class PaymentLink extends ActionBase
      */
     protected function isRefererUrlFromCart(): bool
     {
-        if(!$this->isViewInvoicePage() || empty($_SERVER) || empty($_SERVER["HTTP_REFERER"])){
+        if (!$this->isViewInvoicePage() || empty($_SERVER) || empty($_SERVER["HTTP_REFERER"])) {
             return false;
         }
 
@@ -75,7 +75,7 @@ class PaymentLink extends ActionBase
      */
     protected function isViewInvoicePage(): bool
     {
-        if(empty($_SERVER) || empty($_SERVER["SCRIPT_NAME"])){
+        if (empty($_SERVER) || empty($_SERVER["SCRIPT_NAME"])) {
             return false;
         }
 
