@@ -7,14 +7,14 @@ Xendit Payment Gateway allow you to enable the multi payment channels on WHMCS
 ## System requirements
 This module has been tested against the following tech stacks:
 
-| Requirement            | Minimum                                                     | Recommended                                                       |
-|------------------------|-------------------------------------------------------------|-------------------------------------------------------------------|
-| PHP Version            | 7.2                                                         | Latest 7.3 or 7.4 Release                                         |
-| PHP Memory Limit       | 64MB                                                        | 128MB**                                                           |
-| PHP Database Extension | PDO                                                         | PDO                                                               |
+| Requirement            | Minimum                                                     | Recommended                                                 |
+|------------------------|-------------------------------------------------------------|-------------------------------------------------------------|
+| PHP Version            | 7.2                                                         | Latest 7.4 or 8.1 Release                                   |
+| PHP Memory Limit       | 64MB                                                        | 128MB**                                                     |
+| PHP Database Extension | PDO                                                         | PDO                                                         |
 | PHP Extensions         | Curl with SSL*** , GD2 Image Library, JSON Support, XML 	  | Iconv, MBString, GMP, OpenSSL***, BC Math, Intl, Fileinfo 	 |
-| MySQL Version          | 5.2.0                                                       | Latest 5.7                                                        |
-| Ioncube Loaders        | 10.4.5 or later                                             | The latest 11.x Ioncube for your PHP version                      |
+| MySQL Version          | 5.2.0                                                       | Latest 8.0                                                  |
+| Ioncube Loaders        | 10.4.5 or later                                             | The latest 11.x Ioncube for your PHP version                |
 
 For the latest WHMCS minimum system requirements, please refer to
 https://docs.whmcs.com/System_Requirements
