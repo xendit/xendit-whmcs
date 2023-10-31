@@ -12,7 +12,7 @@ use WHMCS\Billing\Invoice\Item;
 
 class ActionBase
 {
-    const ALLOW_CURRENCIES = ['IDR', 'PHP', 'USD'];
+    const ALLOW_CURRENCIES = ['IDR', 'PHP', 'USD', 'VND', 'MYR', 'THB'];
     const WHMCS_MIN_VERSION_SUPPORT = 7.9;
 
     protected $moduleDomain = 'xendit';
