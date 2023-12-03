@@ -4,7 +4,7 @@ namespace Xendit\Lib;
 
 class XenditRequest
 {
-    protected $tpi_server_domain = "https://tpi.xendit.co";
+    protected $tpi_server_domain = "https://tpi-gateway.xendit.co";
 
     /**
      * @return mixed
@@ -112,7 +112,7 @@ class XenditRequest
     {
         try {
             $response = $this->request(
-                '/payment/xendit/invoice/' . $invoice_id,
+                '/tpi/payment/xendit/invoice/' . $invoice_id,
                 [
                     'headers' => $this->defaultHeader()
                 ]
@@ -133,7 +133,7 @@ class XenditRequest
     {
         try {
             $response = $this->request(
-                '/payment/xendit/credit-card/charges/' . $chargeId . '/refund',
+                '/tpi/payment/xendit/credit-card/charges/' . $chargeId . '/refund',
                 [
                     'headers' => $this->defaultHeader(),
                     'body' => json_encode($payload)
@@ -155,7 +155,7 @@ class XenditRequest
     {
         try {
             $response = $this->request(
-                '/payment/xendit/invoice',
+                '/tpi/payment/xendit/invoice',
                 [
                     'headers' => $this->defaultHeader(),
                     'body' => json_encode($param)
@@ -177,7 +177,7 @@ class XenditRequest
     {
         try {
             $response = $this->request(
-                '/payment/xendit/credit-card/hosted-3ds',
+                '/tpi/payment/xendit/credit-card/hosted-3ds',
                 [
                     'headers' => $this->defaultHeader('2020-02-14'),
                     'body' => json_encode($param)
@@ -199,7 +199,7 @@ class XenditRequest
     {
         try {
             $response = $this->request(
-                '/payment/xendit/credit-card/charges',
+                '/tpi/payment/xendit/credit-card/charges',
                 [
                     'headers' => $this->defaultHeader(),
                     'body' => json_encode($payload)
@@ -220,7 +220,7 @@ class XenditRequest
     public function getCardInfo(string $card_charge_id)
     {
         try {
-            $response = $this->request('/payment/xendit/credit-card/charges/' . $card_charge_id, [
+            $response = $this->request('/tpi/payment/xendit/credit-card/charges/' . $card_charge_id, [
                 'headers' => $this->defaultHeader()
             ]);
             return $this->processResponse($response);
@@ -237,7 +237,7 @@ class XenditRequest
     public function getCardTokenInfo(string $card_token)
     {
         try {
-            $response = $this->request('/payment/xendit/credit-card/token/' . $card_token, [
+            $response = $this->request('/tpi/payment/xendit/credit-card/token/' . $card_token, [
                 'headers' => $this->defaultHeader()
             ]);
             return $this->processResponse($response);
@@ -255,7 +255,7 @@ class XenditRequest
     public function getCardSettings()
     {
         try {
-            $response = $this->request('/payment/xendit/settings/credit-card', [
+            $response = $this->request('/tpi/payment/xendit/settings/credit-card', [
                 'headers' => $this->defaultHeader()
             ]);
             return $this->processResponse($response);
@@ -272,7 +272,7 @@ class XenditRequest
     {
         try {
             $this->request(
-                '/log/metrics/count',
+                '/tpi/log/metrics/count',
                 [
                     'headers' => $this->defaultHeader(),
                     'body' => json_encode($payload)
