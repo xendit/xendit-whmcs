@@ -106,14 +106,12 @@ class PaymentLink extends ActionBase
             return $this->redirectUrl($invoiceUrl);
         }
 
-        $htmlOutput = '<form id="frm-xendit" method="post" action="' . $invoiceUrl . '">';
-        $htmlOutput .= sprintf(
+        $htmlOutput = sprintf(
             '<img src="%s" width="120px" />',
             $params['systemurl'] . '/modules/gateways/' . $this->getDomainName() . '/logo.png'
         );
 
-        $htmlOutput .= '<div><input class="btn btn-success" type="submit" value="Pay via Xendit" /></div>';
-        $htmlOutput .= '</form>';
+        $htmlOutput .= sprintf('<div><a href="%s" class="btn btn-success" title="Pay via Xendit">Pay via Xendit</a></div>', $invoiceUrl);
 
         return $htmlOutput;
     }
