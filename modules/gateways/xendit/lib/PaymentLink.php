@@ -106,36 +106,12 @@ class PaymentLink extends ActionBase
             return $this->redirectUrl($invoiceUrl);
         }
 
-        $postfields = array();
-        $postfields['invoice_id'] = $params['invoiceid'];
-        $postfields['description'] = $params["description"];
-        $postfields['amount'] = $params['amount'];
-        $postfields['currency'] = $params['currency'];
-        $postfields['first_name'] = $params['clientdetails']['firstname'];
-        $postfields['last_name'] = $params['clientdetails']['lastname'];
-        $postfields['email'] = $params['clientdetails']['email'];
-        $postfields['address1'] = $params['clientdetails']['address1'];
-        $postfields['address2'] = $params['clientdetails']['address2'];
-        $postfields['city'] = $params['clientdetails']['city'];
-        $postfields['state'] = $params['clientdetails']['state'];
-        $postfields['postcode'] = $params['clientdetails']['postcode'];
-        $postfields['country'] = $params['clientdetails']['country'];
-        $postfields['phone'] = $params['clientdetails']['phonenumber'];
-        $postfields['callback_url'] = $this->getCallbackUrl($params['systemurl']);
-        $postfields['return_url'] = $params['returnurl'];
-
-        $htmlOutput = '<form id="frm-xendit" method="post" action="' . $invoiceUrl . '">';
-        foreach ($postfields as $k => $v) {
-            $htmlOutput .= '<input type="hidden" name="' . $k . '" value="' . urlencode($v) . '" />';
-        }
-
-        $htmlOutput .= sprintf(
+        $htmlOutput = sprintf(
             '<img src="%s" width="120px" />',
             $params['systemurl'] . '/modules/gateways/' . $this->getDomainName() . '/logo.png'
         );
 
-        $htmlOutput .= '<div><input class="btn btn-success" type="submit" value="Pay via Xendit" /></div>';
-        $htmlOutput .= '</form>';
+        $htmlOutput .= sprintf('<div><a href="%s" class="btn btn-success" title="Pay via Xendit">Pay via Xendit</a></div>', $invoiceUrl);
 
         return $htmlOutput;
     }
