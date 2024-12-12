@@ -8,6 +8,7 @@
  *
  * @return This depends on the hook function point.
  */
+require_once __DIR__ . '/autoload.php';
 
 if (!defined('WHMCS')) {
     die('You cannot access this file directly.');
@@ -58,3 +59,48 @@ function hookClientAreaPageCart($vars)
 }
 
 add_hook("ClientAreaPageCart", 1, 'hookClientAreaPageCart');
+
+/**
+ * Hook to show make Xendit invoice expired when the order is canceled
+ *
+ * @param $vars
+ * @return boolean|void
+ */
+add_hook('CancelOrder', 1, 'cancelXenditInvoice');
+
+/**
+ * Hook to show make Xendit invoice expired when the invoice is canceled
+ *
+ * @param $vars
+ * @return boolean|void
+ */
+add_hook('InvoiceCancelled', 1, 'cancelXenditInvoice');
+
+function cancelXenditInvoice($vars) {
+    if (!class_exists('\Xendit\Lib\ActionBase') || !class_exists('\Xendit\Lib\Model\XenditTransaction')) {
+        return false; 
+    }
+
+    $actionBase = new \Xendit\Lib\ActionBase();
+    try {
+        $flag = "invoiceid";
+
+        if ($vars["orderid"]) {
+            $flag = "orderid";
+        }
+
+        // if the invoice is still active we need to expire the invoice from here
+        $xenditRequest = $actionBase->getXenditRequest();
+
+        $xenditTransactions = $actionBase->getTransactionFromInvoiceId($vars[$flag], $flag);
+
+        if ($actionBase->isTransactionsDataValid($xenditTransactions)) {
+            $xenditRequest->expire($xenditTransactions[0]['transactionid']);
+
+            $actionBase->setTransactionsToExpired($xenditTransactions);
+        }
+    } catch (\Exception $e) {
+        logActivity('Error at cancel event hooks >>> '. $e->getMessage(), 0);
+    }
+    return true;
+}

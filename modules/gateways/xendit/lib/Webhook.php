@@ -25,7 +25,24 @@ class Webhook extends ActionBase
     public function confirmInvoice(int $invoiceId, array $xenditInvoiceData, bool $success = true): bool
     {
         try {
-            if (!$success) {
+            // Load WHMCS invoice
+            $invoice = $this->getInvoice($invoiceId);
+            // Load Xendit transactions by order id column
+            $transactionsDataByOrder = $this->getTransactionFromInvoiceId($invoiceId, "orderid");
+
+            if (!$success) { // that means it's expired and need to cancel the order
+                if (!empty($transactionsDataByOrder)) {
+                    // update xendit transactions
+                    $this->setTransactionsToExpired($transactionsDataByOrder);
+
+                    localAPI('CancelOrder', array(
+                        'orderid' => $transactionsDataByOrder[0]['orderid'],
+                    ));
+
+                    echo 'Success';
+                } else {
+                    echo 'Transaction not found';
+                }
                 return false;
             }
 
@@ -36,9 +53,6 @@ class Webhook extends ActionBase
             if ($invoiceId != $this->getInvoiceIdFromExternalId($xenditInvoiceData['external_id'])) {
                 throw new \Exception('Invoice id is incorrect!');
             }
-
-            // Load WHMCS invoice
-            $invoice = $this->getInvoice($invoiceId);
 
             $transactionId = $xenditInvoiceData['id'];
             $paymentAmount = $this->extractPaidAmount($xenditInvoiceData['paid_amount'], $invoice->total);

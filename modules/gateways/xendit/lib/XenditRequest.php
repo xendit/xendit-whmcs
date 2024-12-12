@@ -173,6 +173,27 @@ class XenditRequest
      * @return false|string
      * @throws \Exception
      */
+    public function expire(string $invoice_id)
+    {
+        try {
+            $response = $this->request(
+                '/tpi/payment/xendit/invoice/' . $invoice_id . '/expire',
+                [
+                    'headers' => $this->defaultHeader()
+                ],
+                "POST"
+            );
+            return $this->processResponse($response);
+        } catch (\Exception $e) {
+            throw new \Exception($e->getMessage());
+        }
+    }
+
+    /**
+     * @param array $param
+     * @return false|string
+     * @throws \Exception
+     */
     public function createHost3DS(array $param = [])
     {
         try {
