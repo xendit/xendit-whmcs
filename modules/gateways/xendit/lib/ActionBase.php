@@ -181,9 +181,9 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
      * @param int $invoiceId
      * @return mixed
      */
-    public function getTransactionFromInvoiceId(int $invoiceId)
+    public function getTransactionFromInvoiceId(int $invoiceId, string $type = "invoiceid")
     {
-        return XenditTransaction::where("invoiceid", $invoiceId)->get();
+        return XenditTransaction::where($type, $invoiceId)->get();
     }
 
     /**
@@ -362,5 +362,37 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
             'postal_code' => $params['postcode']
         ];
         return array_filter($customerAddressObject);
+    }
+
+    /**
+     * get xendit request object
+     *
+     * @return XenditRequest
+     */
+    public function getXenditRequest()
+    {
+        return $this->xenditRequest;
+    }
+
+    /**
+     * @name setTransactionsToExpired
+     * @param $transactionsToCancel object
+     * @return void
+     */
+    public function setTransactionsToExpired($transaction) {
+        $this->updateTransactions($transaction,
+            [
+                'status' => XenditTransaction::STATUS_EXPIRED
+            ]
+        );
+    }
+
+    /**
+     * @name isTransactionsDataValid
+     * @param $transactionsData array
+     * @return boolean
+     */
+    public function isTransactionsDataValid($transactionsData) {
+        return !empty($transactionsData) && $transactionsData[0]["transactionid"] !== "";
     }
 }

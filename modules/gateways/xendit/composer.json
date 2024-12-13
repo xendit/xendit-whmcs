@@ -8,9 +8,16 @@
             "email": "thirdpartyintegrations@xendit.co"
         }
     ],
+    "scripts": {
+        "test": "export IS_TEST=true & vendor/bin/phpunit tests"
+    },
     "homepage": "https://xendit.co",
     "require-dev": {
     	"phpunit/phpunit": "@stable",
         "squizlabs/php_codesniffer": "^3.7"
+    },
+    "require": {
+        "illuminate/database": "^11.34",
+        "vlucas/phpdotenv": "^5.6"
     }
 }

@@ -169,7 +169,7 @@ class PaymentLink extends ActionBase
 
                 case 'EXPIRED':
                     $this->updateTransactions($transactions, ['status' => XenditTransaction::STATUS_EXPIRED]);
-                    return $this->generatePaymentLink($params, true);
+                    return $this->generateFormParam($params, $xenditInvoice['invoice_url']);
 
                 default:
                     return $this->generateFormParam($params, $xenditInvoice['invoice_url']);
@@ -194,12 +194,6 @@ class PaymentLink extends ActionBase
 
             // Get transactions by WHMCS invoice
             $transactions = $this->getTransactionFromInvoiceId($params["invoiceid"]);
-
-            // Create a new Xendit invoice in case the previous invoice is EXPIRED
-            if ($force) {
-                $xenditInvoice = $this->createXenditInvoice($params, $transactions, true);
-                return $this->generateFormParam($params, $xenditInvoice['invoice_url']);
-            }
 
             // Get Xendit Invoice by transaction (Xendit invoice_id)
             $xenditInvoice = false;
