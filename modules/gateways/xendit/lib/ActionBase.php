@@ -393,6 +393,6 @@ Format: <b>{Prefix}-{Invoice ID}</b> . Example: <b>WHMCS-Xendit-123</b>
      * @return boolean
      */
     public function isTransactionsDataValid($transactionsData) {
-        return !empty($transactionsData) && $transactionsData[0]["transactionid"] !== "";
+        return !empty($transactionsData) && !empty($transactionsData[0]["transactionid"]) && $transactionsData[0]["transactionid"] !== "";
     }
 }

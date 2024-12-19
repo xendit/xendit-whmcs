@@ -52,11 +52,11 @@ class XenditRequest
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
-            CURLOPT_URL => sprintf("%s/%s", $this->tpi_server_domain, $endpoint),
+            CURLOPT_URL => sprintf("%s%s", $this->tpi_server_domain, $endpoint),
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
+            CURLOPT_TIMEOUT => 60,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => $method,
@@ -64,7 +64,24 @@ class XenditRequest
             CURLOPT_HTTPHEADER => $param["headers"]
         ));
 
-        $response = curl_exec($curl);
+        // Handle with retry mechanism
+        $retry = 3;
+        $response = false;
+
+        while ($retry > 0) {
+            $response = curl_exec($curl);
+
+            // Check for cURL errors
+            if (curl_errno($curl)) {
+                $error_msg = curl_error($curl);
+                if (strpos($error_msg, 'Could not resolve host') !== false) {
+                    $retry--;
+                    sleep(1 * $retry); // Wait for 1 second before retrying
+                    continue;
+                }
+            }
+            break;
+        }
 
         curl_close($curl);
         return $response;
