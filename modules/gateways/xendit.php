@@ -10,7 +10,9 @@ require_once __DIR__ . '/../../includes/gatewayfunctions.php';
 require __DIR__ . '/xendit/autoload.php';
 
 // Module version
-const XENDIT_PAYMENT_GATEWAY_VERSION = '2.1.1';
+if (!defined('XENDIT_PAYMENT_GATEWAY_VERSION')) {
+    define('XENDIT_PAYMENT_GATEWAY_VERSION', '2.1.2'); // or any default value
+}
 
 use WHMCS\Billing\Invoice;
 use Xendit\Lib\ActionBase;
