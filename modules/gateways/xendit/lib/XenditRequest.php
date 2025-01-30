@@ -96,7 +96,7 @@ class XenditRequest
         $default_header = array(
             'content-type: application/json',
             'x-plugin-name: WHMCS',
-            'x-plugin-version: ' . XENDIT_PAYMENT_GATEWAY_VERSION
+            'x-plugin-version: 2.1.2'
         );
         $default_header[] = 'Authorization: Basic ' . base64_encode(sprintf("%s:", $this->getSecretKey()));
         if (!empty($version)) {
