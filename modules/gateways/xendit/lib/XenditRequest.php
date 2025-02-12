@@ -2,6 +2,10 @@
 
 namespace Xendit\Lib;
 
+if (!defined('XENDIT_PAYMENT_GATEWAY_VERSION')) {
+    define('XENDIT_PAYMENT_GATEWAY_VERSION', '1.3.2'); // or any default value
+}
+
 class XenditRequest
 {
     protected $tpi_server_domain = "https://tpi-gateway.xendit.co";

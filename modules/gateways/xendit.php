@@ -11,7 +11,7 @@ require __DIR__ . '/xendit/autoload.php';
 
 // Module version
 if (!defined('XENDIT_PAYMENT_GATEWAY_VERSION')) {
-    define('XENDIT_PAYMENT_GATEWAY_VERSION', '2.1.2'); // or any default value
+    define('XENDIT_PAYMENT_GATEWAY_VERSION', '1.3.2'); // or any default value
 }
 
 use WHMCS\Billing\Invoice;
