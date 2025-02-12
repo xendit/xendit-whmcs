@@ -2,6 +2,10 @@
 
 namespace Xendit\Lib;
 
+if (!defined('XENDIT_PAYMENT_GATEWAY_VERSION')) {
+    define('XENDIT_PAYMENT_GATEWAY_VERSION', '1.3.2'); // or any default value
+}
+
 class XenditRequest
 {
     protected $tpi_server_domain = "https://tpi-gateway.xendit.co";
@@ -96,7 +100,7 @@ class XenditRequest
         $default_header = array(
             'content-type: application/json',
             'x-plugin-name: WHMCS',
-            'x-plugin-version: 2.1.2'
+            'x-plugin-version: ' . XENDIT_PAYMENT_GATEWAY_VERSION
         );
         $default_header[] = 'Authorization: Basic ' . base64_encode(sprintf("%s:", $this->getSecretKey()));
         if (!empty($version)) {
