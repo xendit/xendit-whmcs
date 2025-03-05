@@ -39,5 +39,4 @@
       channel: C08G5D33LE9
       channel_name: tpi-plugin-release
       attachments:
-        - '{"fallback":"$BUDDY_PIPELINE_NAME execution
-          #$BUDDY_EXECUTION_ID","color":"good","fields":[{"title":"*[$BUDDY_PROJECT_NAME]*","value":"✅ New version $VERSION_TAG of $BUDDY_PROJECT_NAME detected! \n Please edit the version inside the marketplace through [this link]($PUBLISH_URL) \n cc: $INVOICE_SLACK_GROUP","short":false}]}'
+        - '{"fallback":"$BUDDY_PIPELINE_NAME execution $BUDDY_EXECUTION_ID","color":"good","fields":[{"title":"*[$BUDDY_PROJECT_NAME]*","value":"✅ New version $VERSION_TAG of $BUDDY_PROJECT_NAME detected! \n Please edit the version inside the marketplace through [this link]($PUBLISH_URL) \n cc: $INVOICE_SLACK_GROUP"}]}'
