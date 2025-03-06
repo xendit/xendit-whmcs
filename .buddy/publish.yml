@@ -12,6 +12,10 @@
     - key: PUBLISH_URL
       value: "https://marketplace.whmcs.com/product/6411/edit"
       description: publish url
+    - key: VERSION_TAG
+      value: ""
+      settable: true
+      description: version tag
   actions:
     - action: Prepare Env Variables
       type: BUILD
@@ -32,11 +36,12 @@
       - export GIT_TAG="${BUDDY_EXECUTION_TAG}"
       - export GIT_BRANCH="${BUDDY_EXECUTION_BRANCH}"
       shell: BASH
-    - action: Notify deployment finished to tpi-plugin-release
+    - action: Notify deployment finished to plugin-tpi-release
       type: SLACK
       integration_hash: 5ea6524a42eba4000eb35fbb
       trigger_condition: ALWAYS
-      channel: C08G5D33LE9
-      channel_name: tpi-plugin-release
+      channel: C08FYE230G7
+      channel_name: plugin-tpi-release
+      content: "[#$BUDDY_EXECUTION_ID] *$BUDDY_PIPELINE_NAME Finished* <$BUDDY_INVOKER_URL|$BUDDY_INVOKER_NAME>"
       attachments:
-        - '{"fallback":"$BUDDY_PIPELINE_NAME execution $BUDDY_EXECUTION_ID","color":"good","fields":[{"title":"*[$BUDDY_PROJECT_NAME]*","value":"✅ New version $VERSION_TAG of $BUDDY_PROJECT_NAME detected! \n Please edit the version inside the marketplace through [this link]($PUBLISH_URL) \n cc: $INVOICE_SLACK_GROUP"}]}'
+        - '{"fallback":"$BUDDY_PIPELINE_NAME execution $BUDDY_EXECUTION_ID","color":"good","fields":[{"title":"*[$BUDDY_PROJECT_NAME]*","value":"✅ New version $VERSION_TAG of $BUDDY_PROJECT_NAME detected! \n Please edit the version inside the marketplace through <$PUBLISH_URL|here> \n cc: $INVOICE_SLACK_GROUP", "short": true}]}'
